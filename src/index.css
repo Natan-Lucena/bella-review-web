@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Tokens de "Identidade visual" — ver ../frontend-especificacao-telas.md e
+   frontend-prds/01-app-shell-roteamento-design-tokens.md. Tema único, escuro e
+   suave — nenhum componente deve usar as cores cruas padrão do Tailwind
+   (red-500, blue-600, etc.), sempre estes tokens semânticos. */
+@theme {
+  --color-background: #1c1e22;
+  --color-surface: #282b33;
+  --color-surface-border: #33363f;
+  --color-ink: #e8e9ec;
+  --color-ink-muted: #9a9da5;
+  --color-accent: #8ec5ff;
+  --color-accent-ink: #14181f;
+
+  --color-severity-critical: #e2867a;
+  --color-severity-high: #e0a370;
+  --color-severity-medium: #d8c179;
+  --color-severity-low: #9aa3ad;
+
+  --color-status-queued: #8b8f99;
+  --color-status-processing: #7f9fc0;
+  --color-status-completed: #8bb89a;
+  --color-status-failed: #e2867a;
+
+  --radius-DEFAULT: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 18px;
+
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
