@@ -21,7 +21,12 @@ const WORKFLOW_YAML_LINES = [
   "          bella-token: ${{ secrets.BELLA_TOKEN }}",
 ];
 
-const KEY_VALUE_LINE = /^(\s*(?:- )?)([\w-]+):(.*)$/;
+const KEY_VALUE_LINE = /^(\s*)(- )?([\w-]+):(.*)$/;
+
+// As duas chaves cujo valor "parece uma referência" (o uses: da action e o
+// placeholder do token) ganham a cor de string do protótipo — as outras
+// (ubuntu-latest, read, [opened, ...], etc.) ficam na cor padrão do bloco.
+const STRING_VALUE_KEYS = new Set(["uses", "bella-token"]);
 
 function highlightLine(line: string, index: number) {
   const match = KEY_VALUE_LINE.exec(line);
@@ -29,13 +34,16 @@ function highlightLine(line: string, index: number) {
     return <span key={index}>{"\n"}</span>;
   }
 
-  const [, indent, key, rest] = match;
+  const [, indent, dash, key, rest] = match;
+  const valueClassName = STRING_VALUE_KEYS.has(key) ? "text-code-string" : "text-code-text";
+
   return (
     <span key={index}>
       {indent}
-      <span className="text-accent">{key}</span>
-      <span className="text-ink-muted">:</span>
-      <span className="text-ink">{rest}</span>
+      {dash && <span className="text-code-punctuation">{dash}</span>}
+      <span className="text-code-key">{key}</span>
+      <span className="text-code-punctuation">:</span>
+      <span className={valueClassName}>{rest}</span>
       {"\n"}
     </span>
   );

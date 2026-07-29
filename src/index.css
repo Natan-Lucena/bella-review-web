@@ -23,6 +23,14 @@
   --color-status-completed: #8bb89a;
   --color-status-failed: #e2867a;
 
+  /* Highlight manual do YAML da landing (ver pages/landing/WorkflowYamlBlock.tsx)
+     — mesmas cores do protótipo aprovado (claude-design/pages/Bella Reviewer.dc.html),
+     deliberadamente fora da paleta semântica acima (não são severidade/status). */
+  --color-code-key: #b8b3e6;
+  --color-code-punctuation: #6f737d;
+  --color-code-string: #d6b48c;
+  --color-code-text: #cfd2d8;
+
   --radius-DEFAULT: 14px;
   --radius-sm: 10px;
   --radius-lg: 18px;
