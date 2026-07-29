@@ -51,7 +51,9 @@ function renderAuthenticatedAt(path: string) {
 describe("App routing", () => {
   it("renders the landing page at /", () => {
     renderAt("/");
-    expect(screen.getByRole("heading", { name: "Bella Reviewer" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: /Revisão de código por IA que entra/ }),
+    ).toBeInTheDocument();
   });
 
   it("renders signup and login pages", () => {
@@ -72,7 +74,7 @@ describe("App routing", () => {
   it("navigates to the login page from the landing page's secondary CTA", async () => {
     renderAt("/");
 
-    await userEvent.click(screen.getByRole("link", { name: "Já tenho conta" }));
+    await userEvent.click(screen.getAllByRole("link", { name: "Já tenho conta" })[0]);
     expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
   });
 

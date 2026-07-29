@@ -65,4 +65,16 @@ describe("Button", () => {
     expect(link).toHaveAttribute("href", "/signup");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("defaults to the 'sm' size and applies bigger padding for 'lg'", () => {
+    const { rerender } = render(<Button variant="primary">Padrão</Button>);
+    expect(screen.getByRole("button", { name: "Padrão" }).className).toContain("px-4");
+
+    rerender(
+      <Button variant="primary" size="lg">
+        Grande
+      </Button>,
+    );
+    expect(screen.getByRole("button", { name: "Grande" }).className).toContain("px-6");
+  });
 });

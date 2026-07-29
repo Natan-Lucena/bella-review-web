@@ -1,35 +1,38 @@
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Logo } from "../../components/Logo";
-import { PageHeader } from "../../components/PageHeader";
+import { AsyncIcon, AutoReviewIcon, ModelChoiceIcon, TokenHistoryIcon } from "./FeatureIcons";
 import { WorkflowYamlBlock } from "./WorkflowYamlBlock";
 
-// Conteúdo/copy vem de frontend-especificacao-telas.md, Tela 1 — este
-// arquivo só implementa a composição (ver 03-tela-landing.md).
+// Conteúdo/copy e composição vêm de frontend-especificacao-telas.md, Tela 1,
+// e replicam fielmente ../../../claude-design/pages/Bella Reviewer.dc.html
+// (a maquete aprovada — ver frontend-prds/README.md, "Ordem de implementação"):
+// hero em duas colunas, eyebrow acima do H1, ícones de linha nos cards, CTA
+// final dentro de um cartão, rodapé com a assinatura da marca.
 const FEATURES = [
   {
-    icon: "🔍",
+    Icon: AutoReviewIcon,
     title: "Revisão automática por PR",
     description:
       "Analisa o diff completo do Pull Request e comenta diretamente nas linhas, como um revisor humano faria.",
   },
   {
-    icon: "⚡",
+    Icon: AsyncIcon,
     title: "Assíncrono, não trava seu CI",
     description:
-      "A Action só confirma o recebimento (segundos); a análise roda em segundo plano e os comentários aparecem no PR minutos depois.",
+      "A Action só confirma o recebimento, em segundos. A análise roda em segundo plano e os comentários aparecem no PR minutos depois.",
   },
   {
-    icon: "🔑",
+    Icon: ModelChoiceIcon,
     title: "Você escolhe o modelo e paga sua própria conta",
     description:
-      "A chave de API do Gemini é seu próprio provedor, configurada no painel — a plataforma não é um intermediário de custo.",
+      "A chave de API do Gemini é do seu próprio provedor, configurada no painel. A plataforma não é intermediária de custo.",
   },
   {
-    icon: "📊",
+    Icon: TokenHistoryIcon,
     title: "Histórico e consumo de tokens visíveis",
     description:
-      "Todo comentário gerado, toda execução, todo token gasto fica registrado e visível no painel.",
+      "Todo comentário gerado, toda execução e todo token gasto fica registrado e visível no painel — transparência total sobre o que a IA fez e quanto custou.",
   },
 ];
 
@@ -37,68 +40,97 @@ export function LandingPage() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-surface-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-4">
+          <div className="flex items-center gap-2.5">
             <Logo />
-            <span className="text-sm font-medium text-ink">Bella Reviewer</span>
+            <span className="text-[17px] font-medium tracking-tight text-ink">Bella Reviewer</span>
           </div>
-          <Button variant="primary" to="/signup">
-            Criar conta
-          </Button>
-        </div>
-      </header>
-
-      <main className="mx-auto flex max-w-5xl flex-col gap-20 px-6 py-16">
-        <section className="flex flex-col items-center gap-6 text-center">
-          <Logo size={72} />
-          <PageHeader
-            level="h1"
-            title="Bella Reviewer"
-            description="Revisão de código por IA que entra no seu CI como qualquer outra Action — sem servidor pra manter, sem processo novo pra aprender."
-          />
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="primary" to="/signup">
-              Criar conta
-            </Button>
+          <div className="flex items-center gap-2.5">
             <Button variant="secondary" to="/login">
               Já tenho conta
             </Button>
+            <Button variant="primary" to="/signup">
+              Criar conta
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-6">
+        <section className="grid items-center gap-10 py-16 md:grid-cols-[1.12fr_0.88fr] md:gap-14 md:py-24">
+          <div>
+            <span className="inline-flex items-center rounded-full bg-accent/10 px-3.5 py-1.5 text-xs tracking-wide text-accent">
+              Revisão de código por IA · GitHub Actions
+            </span>
+            <h1 className="mt-5 text-4xl leading-[1.1] font-light tracking-tight text-ink md:text-5xl">
+              Revisão de código por IA que entra no seu CI como qualquer outra Action.
+            </h1>
+            <p className="mt-5 max-w-prose text-lg leading-relaxed text-ink-muted">
+              Sem servidor pra manter, sem processo novo pra aprender. Cole dez linhas de YAML no
+              seu workflow e a Bella passa a revisar cada Pull Request.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button variant="primary" size="lg" to="/signup">
+                Criar conta
+              </Button>
+              <Button variant="secondary" size="lg" to="/login">
+                Já tenho conta
+              </Button>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <div
+              className="flex h-[220px] w-[220px] items-center justify-center rounded-full md:h-[300px] md:w-[300px]"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 68%)",
+              }}
+            >
+              <Logo size={160} />
+            </div>
           </div>
         </section>
 
-        <section className="flex flex-col items-center gap-6">
-          <PageHeader
-            title="Plug-and-play: cole ~10 linhas de YAML"
-            description="O mesmo workflow documentado no README real da Action — sem servidor pra hospedar, sem agente pra rodar."
-          />
-          <div className="w-full max-w-xl">
-            <WorkflowYamlBlock />
-            <p className="mt-3 text-center text-sm text-ink-muted">
-              Cole isso, gere um token no painel, e pronto — a partir do próximo Pull Request, a
-              Bella já está revisando.
+        <section className="grid items-center gap-10 pb-20 md:grid-cols-[0.85fr_1.15fr] md:gap-14">
+          <div>
+            <h2 className="text-2xl leading-tight font-light tracking-tight text-ink md:text-[34px]">
+              Plug-and-play, literalmente
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-ink-muted">
+              Não tem servidor pra hospedar, agente pra rodar nem infraestrutura pra mexer. É um
+              passo de CI no workflow que seu repositório já tem.
             </p>
           </div>
+          <WorkflowYamlBlock />
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2">
-          {FEATURES.map((feature) => (
-            <Card key={feature.title} padding="lg">
-              <div className="flex flex-col gap-2">
-                <span aria-hidden="true" className="text-2xl">
-                  {feature.icon}
-                </span>
-                <h3 className="font-medium text-ink">{feature.title}</h3>
-                <p className="text-sm text-ink-muted">{feature.description}</p>
-              </div>
+        <section className="grid gap-5 pb-24 sm:grid-cols-2">
+          {FEATURES.map(({ Icon, title, description }) => (
+            <Card key={title} padding="lg">
+              <Icon className="text-accent" />
+              <h3 className="mt-4 text-lg font-medium tracking-tight text-ink">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-muted">{description}</p>
             </Card>
           ))}
         </section>
 
-        <section className="flex flex-col items-center gap-4 border-t border-surface-border pt-16 text-center">
-          <PageHeader title="Pronto para revisar seu primeiro Pull Request?" />
-          <Button variant="primary" to="/signup">
-            Criar conta
-          </Button>
+        <section className="pb-16">
+          <div className="rounded-xl bg-surface px-8 py-14 text-center shadow-lg shadow-black/25">
+            <h2 className="text-2xl leading-tight font-light tracking-tight text-ink md:text-[32px]">
+              Dez linhas de YAML e a próxima revisão é da Bella.
+            </h2>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Button variant="primary" size="lg" to="/signup">
+                Criar conta
+              </Button>
+              <Button variant="secondary" size="lg" to="/login">
+                Já tenho conta
+              </Button>
+            </div>
+          </div>
+          <p className="mt-9 text-center text-xs text-ink-muted">
+            Bella Reviewer · revisão de Pull Requests com Gemini, no seu GitHub
+          </p>
         </section>
       </main>
     </div>

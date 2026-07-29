@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 
 import { cn } from "../lib/cn";
 
+type ButtonSize = "sm" | "lg";
+
 type BaseButtonProps = {
   variant: "primary" | "secondary";
+  // "lg" is only for a page's one prominent CTA (landing hero/closing) —
+  // everywhere else (nav, forms, table row actions) uses the "sm" default.
+  size?: ButtonSize;
   children: ReactNode;
 };
 
@@ -27,7 +32,12 @@ type LinkButtonProps = BaseButtonProps & {
 type ButtonProps = ClickableButtonProps | LinkButtonProps;
 
 const BASE =
-  "relative inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  "relative inline-flex items-center justify-center gap-2 rounded font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+const SIZE: Record<ButtonSize, string> = {
+  sm: "px-4 py-2 text-sm",
+  lg: "px-6 py-3.5 text-[15px]",
+};
 
 const VARIANT = {
   primary: "bg-accent text-accent-ink hover:brightness-110",
@@ -35,9 +45,11 @@ const VARIANT = {
 };
 
 export function Button(props: ButtonProps) {
+  const size = props.size ?? "sm";
+
   if (props.to !== undefined) {
     return (
-      <Link to={props.to} className={cn(BASE, VARIANT[props.variant])}>
+      <Link to={props.to} className={cn(BASE, SIZE[size], VARIANT[props.variant])}>
         {props.children}
       </Link>
     );
@@ -54,6 +66,7 @@ export function Button(props: ButtonProps) {
       onClick={onClick}
       className={cn(
         BASE,
+        SIZE[size],
         VARIANT[variant],
         isDisabled && "cursor-not-allowed pointer-events-none opacity-50",
       )}
