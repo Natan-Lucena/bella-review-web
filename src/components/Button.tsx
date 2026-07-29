@@ -1,15 +1,30 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 import { cn } from "../lib/cn";
 
-type ButtonProps = {
+type BaseButtonProps = {
   variant: "primary" | "secondary";
+  children: ReactNode;
+};
+
+type ClickableButtonProps = BaseButtonProps & {
+  to?: undefined;
   disabled?: boolean;
   loading?: boolean;
   type?: "button" | "submit";
   onClick?: () => void;
-  children: ReactNode;
 };
+
+// Navegação real (rota muda, botão voltar do navegador funciona) é sempre um
+// <Link>/<a>, nunca um <button onClick={() => navigate(...)}> — distinção de
+// semântica HTML entre "isto navega" e "isto executa uma ação aqui". Ver
+// 00-component-library.md, "Button".
+type LinkButtonProps = BaseButtonProps & {
+  to: string;
+};
+
+type ButtonProps = ClickableButtonProps | LinkButtonProps;
 
 const BASE =
   "relative inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
@@ -19,14 +34,16 @@ const VARIANT = {
   secondary: "bg-transparent border border-surface-border text-ink hover:bg-surface",
 };
 
-export function Button({
-  variant,
-  disabled = false,
-  loading = false,
-  type = "button",
-  onClick,
-  children,
-}: ButtonProps) {
+export function Button(props: ButtonProps) {
+  if (props.to !== undefined) {
+    return (
+      <Link to={props.to} className={cn(BASE, VARIANT[props.variant])}>
+        {props.children}
+      </Link>
+    );
+  }
+
+  const { variant, disabled = false, loading = false, type = "button", onClick, children } = props;
   const isDisabled = disabled || loading;
 
   return (

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
@@ -58,6 +59,20 @@ describe("App routing", () => {
     expect(screen.getByRole("heading", { name: "Criar conta" })).toBeInTheDocument();
 
     renderAt("/login");
+    expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
+  });
+
+  it("navigates for real from the landing page's CTAs (URL changes, not just a visual swap)", async () => {
+    renderAt("/");
+
+    await userEvent.click(screen.getAllByRole("link", { name: "Criar conta" })[0]);
+    expect(screen.getByRole("heading", { name: "Criar conta" })).toBeInTheDocument();
+  });
+
+  it("navigates to the login page from the landing page's secondary CTA", async () => {
+    renderAt("/");
+
+    await userEvent.click(screen.getByRole("link", { name: "Já tenho conta" }));
     expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
   });
 
