@@ -41,10 +41,27 @@ function highlightLine(line: string, index: number) {
   );
 }
 
+// Réplica visual do cartão do protótipo (../../../claude-design/pages/Bella
+// Reviewer.dc.html): barra de "janela" com o nome do arquivo, simulando que é
+// literalmente o arquivo que a pessoa vai colar no repositório dela.
 export function WorkflowYamlBlock() {
   return (
-    <pre className="overflow-x-auto rounded-lg border border-surface-border bg-surface p-4 text-sm">
-      <code className="font-mono">{WORKFLOW_YAML_LINES.map(highlightLine)}</code>
-    </pre>
+    <div className="overflow-hidden rounded-lg border border-surface-border bg-surface shadow-lg shadow-black/20">
+      <div className="flex items-center gap-2.5 border-b border-surface-border px-4 py-3">
+        <div aria-hidden="true" className="flex gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-surface-border" />
+          <span className="h-2.5 w-2.5 rounded-full bg-surface-border" />
+          <span className="h-2.5 w-2.5 rounded-full bg-surface-border" />
+        </div>
+        <span className="font-mono text-xs text-ink-muted">.github/workflows/bella.yml</span>
+      </div>
+      <pre className="overflow-x-auto p-4 text-sm">
+        <code className="font-mono">{WORKFLOW_YAML_LINES.map(highlightLine)}</code>
+      </pre>
+      <p className="border-t border-surface-border px-4 py-3 text-sm text-ink-muted">
+        Cole isso, gere um token no painel, e pronto — a partir do próximo Pull Request, a Bella já
+        está revisando.
+      </p>
+    </div>
   );
 }
