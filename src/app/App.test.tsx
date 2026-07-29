@@ -1,0 +1,102 @@
+import { useEffect } from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+
+import { SessionProvider } from "../data/SessionProvider";
+import { useSession } from "../data/useSession";
+import { App } from "./App";
+
+function renderAt(path: string) {
+  return render(
+    <SessionProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <App />
+      </MemoryRouter>
+    </SessionProvider>,
+  );
+}
+
+// Logs in first, and only mounts the router (with <App />) once
+// `isAuthenticated` is already true — mounting the router before that would
+// let RequireAuth's very first render see `isAuthenticated: false` and
+// redirect to /login before the login() effect below ever gets a chance to
+// run, since effects fire after the render they were scheduled in.
+function LoginThenMountApp({ path }: { path: string }) {
+  const { login, isAuthenticated } = useSession();
+  useEffect(() => {
+    login();
+  }, [login]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>
+  );
+}
+
+function renderAuthenticatedAt(path: string) {
+  return render(
+    <SessionProvider>
+      <LoginThenMountApp path={path} />
+    </SessionProvider>,
+  );
+}
+
+describe("App routing", () => {
+  it("renders the landing page at /", () => {
+    renderAt("/");
+    expect(screen.getByRole("heading", { name: "Bella Reviewer" })).toBeInTheDocument();
+  });
+
+  it("renders signup and login pages", () => {
+    renderAt("/signup");
+    expect(screen.getByRole("heading", { name: "Criar conta" })).toBeInTheDocument();
+
+    renderAt("/login");
+    expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
+  });
+
+  it("redirects unauthenticated access to /repos to the login page", () => {
+    renderAt("/repos");
+    expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
+  });
+
+  it("renders the app shell (header + link) for an authenticated /repos", () => {
+    renderAuthenticatedAt("/repos");
+    expect(screen.getByRole("link", { name: "Meus repositórios" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Meus repositórios" })).toBeInTheDocument();
+  });
+
+  it("renders the repo area (breadcrumb + tabs) and the dashboard on the index route", () => {
+    renderAuthenticatedAt("/repos/abc123");
+    expect(screen.getByRole("link", { name: "Painel" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("heading", { name: "Painel" })).toBeInTheDocument();
+  });
+
+  it("renders the runs page under the repo area, with the Runs tab active", () => {
+    renderAuthenticatedAt("/repos/abc123/runs");
+    expect(screen.getByRole("link", { name: "Execuções" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("heading", { name: "Execuções" })).toBeInTheDocument();
+  });
+
+  it("renders the wizard full-screen, without the AppLayout header", () => {
+    renderAuthenticatedAt("/repos/new");
+    expect(screen.getByRole("heading", { name: "Adicionar repositório" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Meus repositórios" })).not.toBeInTheDocument();
+  });
+
+  it("redirects unauthenticated access to /repos/new to the login page", () => {
+    renderAt("/repos/new");
+    expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
+  });
+
+  it("renders the not-found page for an unknown route", () => {
+    renderAt("/this-route-does-not-exist");
+    expect(screen.getByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
+  });
+});
