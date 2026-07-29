@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { resetMockData } from "../mocks/api-client";
 import { createQueryWrapper } from "../test/query-client-wrapper";
+import type { DashboardPeriod } from "../types/dashboard";
 import { useRepoDashboard } from "./dashboard";
 
 beforeEach(() => {
@@ -16,7 +17,7 @@ describe("useRepoDashboard", () => {
       ({ period }) => useRepoDashboard("repo-bella-api", period),
       {
         wrapper,
-        initialProps: { period: "7d" as const },
+        initialProps: { period: "7d" as DashboardPeriod },
       },
     );
 
