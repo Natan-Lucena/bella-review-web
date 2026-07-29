@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { Button } from "./Button";
@@ -50,5 +51,18 @@ describe("Button", () => {
   it("renders the secondary variant", () => {
     render(<Button variant="secondary">Voltar</Button>);
     expect(screen.getByRole("button", { name: "Voltar" })).toBeInTheDocument();
+  });
+
+  it("renders a real <a> (via react-router-dom's Link) when given a 'to' prop, not a <button>", () => {
+    render(
+      <MemoryRouter>
+        <Button variant="primary" to="/signup">
+          Criar conta
+        </Button>
+      </MemoryRouter>,
+    );
+    const link = screen.getByRole("link", { name: "Criar conta" });
+    expect(link).toHaveAttribute("href", "/signup");
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
