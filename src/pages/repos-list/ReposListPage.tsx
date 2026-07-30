@@ -14,6 +14,11 @@ import { repoConfigBadgeProps } from "../../lib/status-badges";
 // está pronto pra uso sem precisar entrar. A sessão mockada "expirada" é
 // tratada genericamente por RequireAuth na definição de rotas (App.tsx) —
 // nada específico a fazer aqui.
+
+// Altura do Card real de repositório (padding="lg" + duas linhas de texto) —
+// mantém o skeleton do mesmo tamanho do conteúdo que ele antecede.
+const CARD_HEIGHT = "5.75rem";
+
 export function ReposListPage() {
   const navigate = useNavigate();
   const { data, isPending, isError, refetch } = useRepos();
@@ -41,9 +46,9 @@ export function ReposListPage() {
 
       {isPending && (
         <div className="flex flex-col gap-3">
-          <Skeleton shape="block" height="5.75rem" />
-          <Skeleton shape="block" height="5.75rem" />
-          <Skeleton shape="block" height="5.75rem" />
+          <Skeleton shape="block" height={CARD_HEIGHT} />
+          <Skeleton shape="block" height={CARD_HEIGHT} />
+          <Skeleton shape="block" height={CARD_HEIGHT} />
         </div>
       )}
 
@@ -94,6 +99,11 @@ export function ReposListPage() {
         </div>
       )}
 
+      {/* Medida de transição pra Fase 1 (mock): explica uma divergência
+          real do backend hoje (configComplete vs readyForReview), mas é um
+          detalhe de implementação que não deveria vazar pro usuário num
+          produto final. Remover quando a Fase 2 fizer o backend calcular
+          readyForReview de verdade (ver commit que introduziu esse campo). */}
       {showList && (
         <div className="rounded bg-severity-medium/[0.07] px-[18px] py-4 text-[13.5px] leading-[1.65] text-ink-muted">
           <span className="text-severity-medium">Sobre o selo "pronto para revisar":</span> ele é
