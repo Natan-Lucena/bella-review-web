@@ -18,7 +18,7 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
         <Logo size={112} />
       </div>
       <h2 className="mt-5 text-[22px] font-normal tracking-tight text-ink">{title}</h2>
-      <p className="mx-auto mt-2.5 max-w-[38em] text-[15px] leading-relaxed text-ink-muted">
+      <p className="mx-auto mt-2.5 max-w-xl text-[15px] leading-relaxed text-ink-muted">
         {description}
       </p>
       {action && (
