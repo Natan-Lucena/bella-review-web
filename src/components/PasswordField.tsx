@@ -5,6 +5,7 @@ import { FormField } from "./FormField";
 type PasswordFieldProps = {
   label: string;
   htmlFor: string;
+  placeholder?: string;
   error?: string;
   value: string;
   onChange: (value: string) => void;
@@ -12,7 +13,14 @@ type PasswordFieldProps = {
 
 // Especialização de FormField para credencial secreta (senha, chave de API, PAT) —
 // ver 00-component-library.md, "PasswordField".
-export function PasswordField({ label, htmlFor, error, value, onChange }: PasswordFieldProps) {
+export function PasswordField({
+  label,
+  htmlFor,
+  placeholder,
+  error,
+  value,
+  onChange,
+}: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -23,9 +31,10 @@ export function PasswordField({ label, htmlFor, error, value, onChange }: Passwo
           type={visible ? "text" : "password"}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${htmlFor}-error` : undefined}
-          className="w-full rounded border border-surface-border bg-background px-3 py-2 pr-10 text-ink"
+          className={`w-full rounded-[12px] border ${error ? "border-[#8a5c5c]" : "border-surface-border"} bg-background px-[15px] py-[13px] pr-11 text-[15px] text-ink`}
         />
         <button
           type="button"

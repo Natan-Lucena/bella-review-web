@@ -14,7 +14,7 @@ type SubmitButtonProps = {
 export function SubmitButton({ disabled = false, children }: SubmitButtonProps) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant="primary" disabled={disabled} loading={pending}>
+    <Button type="submit" variant="primary" size="md" disabled={disabled} loading={pending}>
       {children}
     </Button>
   );

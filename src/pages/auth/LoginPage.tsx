@@ -48,14 +48,14 @@ export function LoginPage() {
         <span className="text-[17px] font-medium text-ink">Bella Reviewer</span>
       </Link>
 
-      <div className="w-full max-w-md rounded-xl bg-surface p-8 shadow-lg shadow-black/25">
+      <div className="w-full max-w-md rounded-lg bg-surface p-8 shadow-lg shadow-black/25">
         {showAccountCreatedNotice && (
-          <div className="mb-6 rounded-xl bg-status-completed/15 px-4 py-3 text-sm text-status-completed">
+          <div className="mb-6 rounded-xl bg-status-completed/10 px-3.5 py-3 text-[13.5px] text-status-completed">
             Conta criada — faça login para continuar.
           </div>
         )}
 
-        <h1 className="text-2xl font-normal tracking-tight text-ink">Entrar</h1>
+        <h1 className="text-[26px] font-normal tracking-tight text-ink">Entrar</h1>
         <p className="mt-2 text-sm text-ink-muted">Bem-vinda de volta.</p>
 
         <form action={formAction} className="mt-6 flex flex-col gap-5">
@@ -66,19 +66,23 @@ export function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="voce@exemplo.com"
-              className="w-full rounded border border-surface-border bg-background px-3 py-2 text-ink"
+              className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] text-[15px] text-ink"
             />
           </FormField>
 
           <PasswordField
             label="Senha"
             htmlFor="login-password"
+            placeholder="sua senha"
             value={password}
             onChange={setPassword}
           />
 
           {state.error && (
-            <p role="alert" className="text-sm text-severity-critical">
+            <p
+              role="alert"
+              className="rounded-xl bg-severity-critical/10 px-3.5 py-3 text-[13.5px] text-severity-critical"
+            >
               {state.error}
             </p>
           )}
