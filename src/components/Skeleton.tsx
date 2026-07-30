@@ -16,7 +16,7 @@ export function Skeleton({ shape, width = "100%", height }: SkeletonProps) {
     <div
       role="presentation"
       aria-hidden="true"
-      className={cn("animate-pulse rounded bg-surface-border", shape === "line" && "rounded-full")}
+      className={cn("animate-pulse rounded bg-surface", shape === "line" && "rounded-full")}
       style={{ width, height: height ?? defaultHeight }}
     />
   );

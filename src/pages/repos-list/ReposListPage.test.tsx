@@ -48,17 +48,31 @@ describe("ReposListPage", () => {
     expect(screen.getByText("Natan-Lucena/bella-review-web")).toBeInTheDocument();
     expect(screen.getByText("Natan-Lucena/bella-review-action")).toBeInTheDocument();
 
-    // bella-reviewer-api: as 4 credenciais configuradas -> "Pronto".
-    expect(screen.getAllByText("Pronto")).toHaveLength(1);
-    // bella-review-web (sem webhook secret) e bella-review-action (nada
-    // configurado) -> "Configuração pendente" para as outras duas.
-    expect(screen.getAllByText("Configuração pendente")).toHaveLength(2);
+    // bella-reviewer-api e bella-review-web: llm+scm+(token OU webhook) ->
+    // "Pronto para revisar" (bella-review-web tem token da Action mesmo sem
+    // segredo de webhook, e ainda assim conta como pronto).
+    expect(screen.getAllByText("Pronto para revisar")).toHaveLength(2);
+    // bella-review-action (nada configurado) -> "Configuração pendente".
+    expect(screen.getAllByText("Configuração pendente")).toHaveLength(1);
 
-    // bella-review-web tem llm configurado mesmo com configComplete false —
-    // o modelo real aparece, não "ainda não configurado".
+    // bella-review-web tem llm configurado -> o modelo real aparece, não
+    // "ainda não configurado".
     expect(screen.getAllByText("Gemini · gemini-2.5-flash")).toHaveLength(2);
     // bella-review-action nunca configurou llm -> texto de fallback.
     expect(screen.getByText("Ainda não configurado")).toBeInTheDocument();
+  });
+
+  it("shows the explanatory callout about the 'pronto para revisar' badge only when there are repos", async () => {
+    renderPage();
+    expect(await screen.findByText("Natan-Lucena/bella-reviewer-api")).toBeInTheDocument();
+    expect(screen.getByText(/Sobre o selo "pronto para revisar"/)).toBeInTheDocument();
+  });
+
+  it("does not show the callout in the empty state", async () => {
+    vi.spyOn(apiClient, "listRepos").mockResolvedValueOnce({ repos: [] });
+    renderPage();
+    expect(await screen.findByText("Você ainda não tem nenhum repositório")).toBeInTheDocument();
+    expect(screen.queryByText(/Sobre o selo/)).not.toBeInTheDocument();
   });
 
   it("navigates to /repos/:id when a repo card is clicked", async () => {

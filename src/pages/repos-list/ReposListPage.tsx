@@ -55,7 +55,7 @@ export function ReposListPage() {
       {!isPending && repos.length > 0 && (
         <div className="flex flex-col gap-3">
           {repos.map((repo) => {
-            const badge = repoConfigBadgeProps(repo.configComplete);
+            const badge = repoConfigBadgeProps(repo.readyForReview);
             return (
               <Card
                 key={repo.id}
@@ -80,6 +80,16 @@ export function ReposListPage() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {!isPending && repos.length > 0 && (
+        <div className="rounded bg-severity-medium/[0.07] px-[18px] py-4 text-[13.5px] leading-[1.65] text-ink-muted">
+          <span className="text-severity-medium">Sobre o selo "pronto para revisar":</span> ele é
+          calculado aqui no painel a partir de chave do Gemini + PAT do GitHub + (token da Action{" "}
+          <span className="italic">ou</span> segredo de webhook). O campo{" "}
+          <span className="font-mono">configComplete</span> do backend exige os quatro ao mesmo
+          tempo, o que marcaria como incompleto quem seguiu o caminho recomendado.
         </div>
       )}
     </div>
