@@ -42,6 +42,9 @@ export function SignupPage() {
       if (error instanceof ApiError && error.code === "email_already_registered") {
         return { emailError: "Este email já está cadastrado." };
       }
+      // Mesma lógica do LoginPage: mensagem pro usuário é sempre genérica,
+      // mas o erro real vale logar pra depuração.
+      console.error(error);
       return { formError: "Não foi possível criar a conta agora. Tente novamente." };
     }
   }, {});
@@ -108,7 +111,10 @@ export function SignupPage() {
           />
 
           {state.formError && (
-            <p role="alert" className="text-sm text-severity-critical">
+            <p
+              role="alert"
+              className="rounded-xl bg-severity-critical/10 px-3.5 py-3 text-[13.5px] text-severity-critical"
+            >
               {state.formError}
             </p>
           )}

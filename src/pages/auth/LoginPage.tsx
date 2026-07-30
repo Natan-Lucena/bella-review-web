@@ -36,7 +36,11 @@ export function LoginPage() {
       const redirectTo = searchParams.get("redirect");
       navigate(redirectTo || "/repos", { replace: true });
       return {};
-    } catch {
+    } catch (error) {
+      // A mensagem pro usuário é sempre genérica (nunca distinguir "senha
+      // errada" de "usuário não existe"), mas o erro real (com `code`, ver
+      // ApiError) vale logar pra depuração — só o texto exibido é opaco.
+      console.error(error);
       return { error: "Email ou senha incorretos." };
     }
   }, {});
