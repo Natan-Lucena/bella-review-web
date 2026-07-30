@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ApiError } from "./api-error";
+import { ApiError } from "../lib/api-error";
 import {
   createRepo,
   generateActionToken,
