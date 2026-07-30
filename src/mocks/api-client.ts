@@ -73,11 +73,21 @@ function toRepo(record: RepoRecord): Repo {
     record.actionTokenGenerated &&
     record.webhookSecretGenerated;
 
+  // Mais permissivo que `configComplete`: um repositório configurado só com a
+  // Action (sem webhook) é plenamente funcional, não "incompleto" — ver
+  // frontend-especificacao-telas.md, Tela 4, nota sobre `configComplete`, e
+  // Repo.readyForReview.
+  const readyForReview =
+    record.llmCredential !== null &&
+    record.scmCredential !== null &&
+    (record.actionTokenGenerated || record.webhookSecretGenerated);
+
   return {
     id: record.id,
     fullName: record.fullName,
     active: record.active,
     configComplete,
+    readyForReview,
     llmProvider: record.llmCredential?.provider ?? "",
     model: record.llmCredential ? record.config.model : "",
   };

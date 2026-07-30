@@ -63,12 +63,19 @@ describe("listRepos", () => {
     const bellaWeb = repos.find((repo) => repo.id === "repo-bella-web");
     const bellaAction = repos.find((repo) => repo.id === "repo-bella-action");
 
-    expect(bellaApi).toMatchObject({ configComplete: true, active: true });
+    expect(bellaApi).toMatchObject({ configComplete: true, readyForReview: true, active: true });
     // Action + LLM + SCM configurados, mas sem webhook secret => configComplete
-    // permanece false para sempre (ver frontend-especificacao-telas.md, item 1).
-    expect(bellaWeb).toMatchObject({ configComplete: false, active: true, llmProvider: "Gemini" });
+    // permanece false para sempre (ver frontend-especificacao-telas.md, item 1),
+    // mas readyForReview já é true (token da Action cobre o caminho recomendado).
+    expect(bellaWeb).toMatchObject({
+      configComplete: false,
+      readyForReview: true,
+      active: true,
+      llmProvider: "Gemini",
+    });
     expect(bellaAction).toMatchObject({
       configComplete: false,
+      readyForReview: false,
       active: false,
       llmProvider: "",
       model: "",

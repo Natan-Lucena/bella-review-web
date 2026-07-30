@@ -8,15 +8,13 @@ type BadgeProps = { tone: BadgeTone; label: string };
 // {label, color, bg}` do StatusBadge.dc.html do protótipo componentizado).
 // Cresce um função por PRD conforme cada tela (05, 08, 09, 10) é implementada.
 
-// PRD 05 (Meus Repositórios): reflete o `configComplete` cru vindo da API —
-// não o estado "pronto para revisar" mais nuançado que o protótipo sugere
-// (llm + scm + (token da Action OU segredo de webhook)), porque `GET /repos`
-// só devolve o booleano já agregado, sem os sinais por credencial que
-// permitiriam computar isso no frontend (ver backend-prds/13-...md). Ver nota
-// da Tela 4 em frontend-especificacao-telas.md: mesmo sendo o campo cru, o
-// texto nunca deve soar como "incompleto".
-export function repoConfigBadgeProps(configComplete: boolean): BadgeProps {
-  return configComplete
-    ? { tone: "success", label: "Pronto" }
+// PRD 05 (Meus Repositórios): usa `Repo.readyForReview` (calculado no mock —
+// llm + scm + (token da Action OU segredo de webhook)), não o `configComplete`
+// cru (que exige as 4 credenciais e nunca fica `true` pra quem só usa a
+// Action). Ver frontend-especificacao-telas.md, Tela 4, nota sobre
+// `configComplete`: o texto nunca deve soar como "incompleto".
+export function repoConfigBadgeProps(readyForReview: boolean): BadgeProps {
+  return readyForReview
+    ? { tone: "success", label: "Pronto para revisar" }
     : { tone: "warning", label: "Configuração pendente" };
 }
