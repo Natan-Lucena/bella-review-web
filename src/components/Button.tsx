@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { cn } from "../lib/cn";
 
-type ButtonSize = "sm" | "lg";
+type ButtonSize = "sm" | "md" | "lg";
 
 type BaseButtonProps = {
   variant: "primary" | "secondary";
@@ -36,6 +36,7 @@ const BASE =
 
 const SIZE: Record<ButtonSize, string> = {
   sm: "px-4 py-2 text-sm",
+  md: "px-5 py-3 text-[14.5px]",
   lg: "px-6 py-3.5 text-[15px]",
 };
 
@@ -43,6 +44,11 @@ const VARIANT = {
   primary: "bg-accent text-accent-ink hover:brightness-110",
   secondary: "bg-transparent border border-surface-border text-ink hover:bg-surface",
 };
+
+// Estado desabilitado é uma aparência própria (cinza chapado), não uma versão
+// esmaecida da variant — ver Button.dc.html, objeto `off` (nunca um opacity
+// fade sobre a cor da variant).
+const DISABLED = "bg-[#2f323b] text-[#6f737d]";
 
 export function Button(props: ButtonProps) {
   const size = props.size ?? "sm";
@@ -67,8 +73,7 @@ export function Button(props: ButtonProps) {
       className={cn(
         BASE,
         SIZE[size],
-        VARIANT[variant],
-        isDisabled && "cursor-not-allowed pointer-events-none opacity-50",
+        isDisabled ? cn(DISABLED, "cursor-not-allowed pointer-events-none") : VARIANT[variant],
       )}
     >
       <span className={loading ? "invisible" : undefined}>{children}</span>

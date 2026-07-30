@@ -53,8 +53,8 @@ export function SignupPage() {
         <span className="text-[17px] font-medium text-ink">Bella Reviewer</span>
       </Link>
 
-      <div className="w-full max-w-md rounded-xl bg-surface p-8 shadow-lg shadow-black/25">
-        <h1 className="text-2xl font-normal tracking-tight text-ink">Criar conta</h1>
+      <div className="w-full max-w-md rounded-lg bg-surface p-8 shadow-lg shadow-black/25">
+        <h1 className="text-[26px] font-normal tracking-tight text-ink">Criar conta</h1>
         <p className="mt-2 text-sm text-ink-muted">Email e senha — é só isso que precisamos.</p>
 
         <form action={formAction} className="mt-6 flex flex-col gap-5">
@@ -68,14 +68,14 @@ export function SignupPage() {
                 placeholder="voce@exemplo.com"
                 aria-invalid={state.emailError ? true : undefined}
                 aria-describedby={state.emailError ? "signup-email-error" : undefined}
-                className="w-full rounded border border-surface-border bg-background px-3 py-2 text-ink"
+                className={`w-full rounded-[12px] border ${state.emailError ? "border-[#8a5c5c]" : "border-surface-border"} bg-background px-[15px] py-[13px] text-[15px] text-ink`}
               />
             </FormField>
             {state.emailError && (
               <p
                 id="signup-email-error"
                 role="alert"
-                className="mt-2 text-sm text-severity-critical"
+                className="mt-2.5 text-[13.5px] text-severity-critical"
               >
                 {state.emailError}{" "}
                 <Link to="/login" className="underline">
@@ -88,6 +88,7 @@ export function SignupPage() {
           <PasswordField
             label="Senha"
             htmlFor="signup-password"
+            placeholder="mínimo 8 caracteres"
             value={password}
             onChange={setPassword}
             error={
@@ -100,6 +101,7 @@ export function SignupPage() {
           <PasswordField
             label="Confirmar senha"
             htmlFor="signup-confirm-password"
+            placeholder="repita a senha"
             value={confirmPassword}
             onChange={setConfirmPassword}
             error={confirmPassword && !confirmValid ? "As senhas não coincidem." : undefined}

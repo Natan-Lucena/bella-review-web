@@ -13,13 +13,13 @@ type FormFieldProps = {
 // quando `error` estiver presente — ver 00-component-library.md, "FormField".
 export function FormField({ label, htmlFor, error, children }: FormFieldProps) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={htmlFor} className="text-[13.5px] font-normal text-ink-muted">
         {label}
       </label>
       {children}
       {error && (
-        <span id={`${htmlFor}-error`} role="alert" className="text-sm text-severity-critical">
+        <span id={`${htmlFor}-error`} role="alert" className="text-[13.5px] text-severity-critical">
           {error}
         </span>
       )}
