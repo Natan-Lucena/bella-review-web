@@ -75,6 +75,21 @@ describe("ReposListPage", () => {
     expect(screen.queryByText(/Sobre o selo/)).not.toBeInTheDocument();
   });
 
+  it("shows a distinct error state (not the empty-repos one) when repos fail to load, and retry refetches", async () => {
+    vi.spyOn(apiClient, "listRepos").mockRejectedValueOnce(new Error("network error"));
+    renderPage();
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText("Não foi possível carregar seus repositórios"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Você ainda não tem nenhum repositório")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Adicionar repositório" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Tentar novamente" }));
+    expect(await screen.findByText("Natan-Lucena/bella-reviewer-api")).toBeInTheDocument();
+  });
+
   it("navigates to /repos/:id when a repo card is clicked", async () => {
     renderPage();
     const user = userEvent.setup();

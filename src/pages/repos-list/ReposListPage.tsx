@@ -16,8 +16,10 @@ import { repoConfigBadgeProps } from "../../lib/status-badges";
 // nada específico a fazer aqui.
 export function ReposListPage() {
   const navigate = useNavigate();
-  const { data, isPending } = useRepos();
+  const { data, isPending, isError, refetch } = useRepos();
   const repos = data?.repos ?? [];
+  const showEmpty = !isPending && !isError && repos.length === 0;
+  const showList = !isPending && !isError && repos.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,9 +29,10 @@ export function ReposListPage() {
           title="Meus repositórios"
           description="Cada repositório tem suas próprias credenciais, histórico e consumo."
         />
-        {/* Só aparece com a lista não-vazia — no vazio, o CTA já vive no
-            EmptyState logo abaixo; duplicar aqui seria redundante. */}
-        {!isPending && repos.length > 0 && (
+        {/* Só aparece com a lista não-vazia — no vazio/erro, o CTA (ou o botão
+            de tentar de novo) já vive no EmptyState logo abaixo; duplicar
+            aqui seria redundante. */}
+        {showList && (
           <Button variant="primary" to="/repos/new">
             Adicionar repositório
           </Button>
@@ -44,7 +47,15 @@ export function ReposListPage() {
         </div>
       )}
 
-      {!isPending && repos.length === 0 && (
+      {!isPending && isError && (
+        <EmptyState
+          title="Não foi possível carregar seus repositórios"
+          description="Algo deu errado ao buscar a lista. Tente novamente."
+          action={{ label: "Tentar novamente", onClick: () => refetch() }}
+        />
+      )}
+
+      {showEmpty && (
         <EmptyState
           title="Você ainda não tem nenhum repositório"
           description="Cadastre o primeiro para gerar o token da Action e começar a receber revisões nos seus Pull Requests."
@@ -52,7 +63,7 @@ export function ReposListPage() {
         />
       )}
 
-      {!isPending && repos.length > 0 && (
+      {showList && (
         <div className="flex flex-col gap-3">
           {repos.map((repo) => {
             const badge = repoConfigBadgeProps(repo.readyForReview);
@@ -83,7 +94,7 @@ export function ReposListPage() {
         </div>
       )}
 
-      {!isPending && repos.length > 0 && (
+      {showList && (
         <div className="rounded bg-severity-medium/[0.07] px-[18px] py-4 text-[13.5px] leading-[1.65] text-ink-muted">
           <span className="text-severity-medium">Sobre o selo "pronto para revisar":</span> ele é
           calculado aqui no painel a partir de chave do Gemini + PAT do GitHub + (token da Action{" "}
