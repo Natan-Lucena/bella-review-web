@@ -10,7 +10,7 @@ import type {
   ReviewRunSummary,
 } from "../types/review-run";
 import type { LoginResponse, SignupResponse } from "../types/user";
-import { ApiError } from "./api-error";
+import { ApiError } from "../lib/api-error";
 import { seedRepos, seedUsers } from "./fixtures";
 import type { RepoRecord, ReviewRunRecord, SeedUser } from "./fixtures";
 

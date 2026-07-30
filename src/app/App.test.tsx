@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
@@ -9,12 +10,15 @@ import { useSession } from "../data/useSession";
 import { App } from "./App";
 
 function renderAt(path: string) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <SessionProvider>
-      <MemoryRouter initialEntries={[path]}>
-        <App />
-      </MemoryRouter>
-    </SessionProvider>,
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>
+      </SessionProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -41,10 +45,13 @@ function LoginThenMountApp({ path }: { path: string }) {
 }
 
 function renderAuthenticatedAt(path: string) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <SessionProvider>
-      <LoginThenMountApp path={path} />
-    </SessionProvider>,
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <LoginThenMountApp path={path} />
+      </SessionProvider>
+    </QueryClientProvider>,
   );
 }
 
