@@ -1,14 +1,37 @@
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
+import { CodeBlock } from "../../components/CodeBlock";
 import { Logo } from "../../components/Logo";
 import { AsyncIcon, AutoReviewIcon, ModelChoiceIcon, TokenHistoryIcon } from "./FeatureIcons";
-import { WorkflowYamlBlock } from "./WorkflowYamlBlock";
 
 // Conteúdo/copy e composição vêm de frontend-especificacao-telas.md, Tela 1,
 // e replicam fielmente ../../../claude-design/pages/Bella Reviewer.dc.html
 // (a maquete aprovada — ver frontend-prds/README.md, "Ordem de implementação"):
 // hero em duas colunas, eyebrow acima do H1, ícones de linha nos cards, CTA
 // final dentro de um cartão, rodapé com a assinatura da marca.
+
+// O mesmo YAML documentado no README real da Action (ver
+// frontend-especificacao-telas.md, Tela 1). Ver PRD 06: generalizado do antigo
+// `WorkflowYamlBlock` local pro `CodeBlock` compartilhado, reaproveitado
+// também pelo trecho do Passo 6 do Wizard.
+const WORKFLOW_YAML = [
+  "name: Bella Reviewer",
+  "",
+  "on:",
+  "  pull_request:",
+  "    types: [opened, synchronize, reopened]",
+  "",
+  "jobs:",
+  "  bella-review:",
+  "    runs-on: ubuntu-latest",
+  "    permissions:",
+  "      pull-requests: read",
+  "    steps:",
+  "      - uses: Natan-Lucena/bella-review-action@v1",
+  "        with:",
+  "          bella-token: ${{ secrets.BELLA_TOKEN }}",
+].join("\n");
+
 const FEATURES = [
   {
     Icon: AutoReviewIcon,
@@ -101,7 +124,10 @@ export function LandingPage() {
               passo de CI no workflow que seu repositório já tem.
             </p>
           </div>
-          <WorkflowYamlBlock />
+          <CodeBlock
+            code={WORKFLOW_YAML}
+            footer="Cole isso, gere um token no painel, e pronto — a partir do próximo Pull Request, a Bella já está revisando."
+          />
         </section>
 
         <section className="grid gap-5 pb-24 sm:grid-cols-2">

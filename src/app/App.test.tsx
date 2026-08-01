@@ -110,7 +110,9 @@ describe("App routing", () => {
 
   it("renders the wizard full-screen, without the AppLayout header", () => {
     renderAuthenticatedAt("/repos/new");
-    expect(screen.getByRole("heading", { name: "Adicionar repositório" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Qual repositório a Bella vai revisar?" }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Meus repositórios" })).not.toBeInTheDocument();
   });
 

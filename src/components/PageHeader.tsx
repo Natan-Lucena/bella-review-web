@@ -9,7 +9,7 @@ type PageHeaderProps = {
 // 00-component-library.md, "PageHeader". `level="h1"` deve aparecer só uma vez por
 // página renderizada.
 const HEADING_SIZE = {
-  h1: "text-3xl md:text-4xl font-semibold tracking-tight",
+  h1: "text-[30px] font-light tracking-tight",
   h2: "text-xl font-medium",
 };
 
