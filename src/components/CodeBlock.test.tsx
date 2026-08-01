@@ -48,4 +48,9 @@ describe("CodeBlock", () => {
     const { container } = render(<CodeBlock code={"# a comment\nname: x"} />);
     expect(container.querySelector("code")?.textContent).toBe("# a comment\nname: x\n");
   });
+
+  it("preserves blank lines in the middle of the code", () => {
+    const { container } = render(<CodeBlock code={"name: x\n\non:"} />);
+    expect(container.querySelector("code")?.textContent).toBe("name: x\n\non:\n");
+  });
 });
