@@ -36,7 +36,7 @@ export function Step4ScmCredential({
       await setScmCredential.mutateAsync(pat.trim());
       onAdvance();
     } catch (error) {
-      console.error(error);
+      console.error(`Failed to set SCM credential for repo ${repoId}:`, error);
       setFormError("Não foi possível salvar o token agora. Tente novamente.");
     }
   }

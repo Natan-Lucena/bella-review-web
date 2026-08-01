@@ -57,7 +57,13 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, revealedSecret: action.secret };
     case "SET_ACK":
       return { ...state, ack: action.ack };
-    default:
-      return state;
+    default: {
+      // Exaustividade garantida em tempo de compilação: se um novo `type` for
+      // adicionado a WizardAction sem um case aqui, `action` deixa de ser
+      // `never` e o build quebra nesta linha, em vez de silenciosamente
+      // ignorar o dispatch em runtime.
+      const exhaustiveCheck: never = action;
+      throw new Error(`Unhandled wizard action: ${JSON.stringify(exhaustiveCheck)}`);
+    }
   }
 }
