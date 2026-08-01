@@ -35,7 +35,7 @@ export function Step3LlmCredential({
       await setLlmCredential.mutateAsync(apiKey.trim());
       onAdvance();
     } catch (error) {
-      console.error(error);
+      console.error(`Failed to set LLM credential for repo ${repoId}:`, error);
       setFormError("Não foi possível salvar a chave agora. Tente novamente.");
     }
   }
