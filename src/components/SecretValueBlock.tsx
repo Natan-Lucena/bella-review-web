@@ -22,12 +22,12 @@ export function SecretValueBlock({ label, value, mono = true }: SecretValueBlock
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-ink">{label}</span>
-      <div className="flex items-center justify-between gap-2 rounded border border-surface-border bg-background px-3 py-2">
-        <code className={cn("truncate text-sm text-ink", mono && "font-mono")}>{value}</code>
+    <div className="flex flex-col">
+      <span className="mb-2 text-[13px] font-normal text-ink-muted">{label}</span>
+      <div className="flex items-center justify-between gap-4 rounded bg-surface px-5 py-4 shadow-lg shadow-black/25">
+        <code className={cn("truncate text-[13.5px] text-ink", mono && "font-mono")}>{value}</code>
         <Button variant="secondary" onClick={handleCopy}>
-          {copied ? "Copiado!" : "Copiar"}
+          {copied ? "Copiado" : "Copiar"}
         </Button>
       </div>
     </div>

@@ -22,6 +22,6 @@ describe("SecretValueBlock", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Copiar" }));
     expect(writeText).toHaveBeenCalledWith("bella_at_abc123");
-    expect(screen.getByRole("button", { name: "Copiado!" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copiado" })).toBeInTheDocument();
   });
 });

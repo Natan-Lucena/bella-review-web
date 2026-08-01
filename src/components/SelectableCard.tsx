@@ -1,3 +1,5 @@
+import type { Ref } from "react";
+
 import { cn } from "../lib/cn";
 
 type SelectableCardProps = {
@@ -5,6 +7,13 @@ type SelectableCardProps = {
   onSelect: () => void;
   title: string;
   description?: string;
+  // Selo curto ao lado do título (ex. "recomendado") — tom próprio (accent),
+  // não faz parte de `title` pra não virar texto corrido na mesma cor.
+  badge?: string;
+  // Opcional: o container do grupo (ex.: Wizard Passo 2) usa isso pra mover o
+  // foco de verdade pro card recém-selecionado ao navegar por seta do teclado
+  // — React 19 aceita `ref` como prop comum, sem precisar de forwardRef.
+  ref?: Ref<HTMLDivElement>;
 };
 
 // Uma opção dentro de um grupo de escolha única apresentado como cards (ex.: método
@@ -12,9 +21,17 @@ type SelectableCardProps = {
 // pela navegação por seta do teclado entre as opções — este componente só expõe
 // role="radio"/aria-checked/roving tabindex. Ver 00-component-library.md,
 // "SelectableCard".
-export function SelectableCard({ selected, onSelect, title, description }: SelectableCardProps) {
+export function SelectableCard({
+  selected,
+  onSelect,
+  title,
+  description,
+  badge,
+  ref,
+}: SelectableCardProps) {
   return (
     <div
+      ref={ref}
       role="radio"
       aria-checked={selected}
       tabIndex={selected ? 0 : -1}
@@ -26,12 +43,28 @@ export function SelectableCard({ selected, onSelect, title, description }: Selec
         }
       }}
       className={cn(
-        "cursor-pointer rounded-lg border-2 bg-surface p-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-        selected ? "border-accent" : "border-surface-border",
+        "flex cursor-pointer items-start gap-4 rounded-2xl border bg-surface px-6 py-[22px] shadow-lg shadow-black/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        selected ? "border-accent" : "border-transparent",
       )}
     >
-      <p className="font-medium text-ink">{title}</p>
-      {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "mt-0.5 flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full border-2",
+          selected ? "border-accent" : "border-surface-border",
+        )}
+      >
+        {selected && <span className="h-2 w-2 rounded-full bg-accent" />}
+      </span>
+      <div>
+        <p className="text-[16px] font-medium text-ink">
+          {title}
+          {badge && <span className="ml-1.5 text-[12.5px] font-normal text-accent">{badge}</span>}
+        </p>
+        {description && (
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{description}</p>
+        )}
+      </div>
     </div>
   );
 }
