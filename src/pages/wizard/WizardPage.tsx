@@ -12,6 +12,9 @@ import { Step6Success } from "./steps/Step6Success";
 import { initialWizardState, wizardReducer } from "./wizardReducer";
 import type { WizardStep } from "./wizardReducer";
 
+// Passo 6 (sucesso) não tem entrada aqui de propósito: StepProgress some
+// nesse passo (ver `state.step < 6` abaixo), então ele nunca precisa de um
+// nome — não é uma omissão, é o passo terminal, fora da contagem "Passo X de 5".
 const STEP_NAMES: Record<Exclude<WizardStep, 6>, string> = {
   1: "Repositório",
   2: "Integração",
@@ -72,7 +75,7 @@ export function WizardPage() {
 
         {state.step === 2 && (
           <Step2Method
-            method={state.method}
+            method={method}
             onMethodChange={(next) => dispatch({ type: "SET_METHOD", method: next })}
             onBack={() => dispatch({ type: "BACK" })}
             onNext={() => dispatch({ type: "ADVANCE" })}

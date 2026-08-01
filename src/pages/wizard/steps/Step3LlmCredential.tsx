@@ -34,7 +34,8 @@ export function Step3LlmCredential({
     try {
       await setLlmCredential.mutateAsync(apiKey.trim());
       onAdvance();
-    } catch {
+    } catch (error) {
+      console.error(error);
       setFormError("Não foi possível salvar a chave agora. Tente novamente.");
     }
   }
