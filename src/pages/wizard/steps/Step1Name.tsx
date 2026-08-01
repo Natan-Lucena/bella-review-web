@@ -32,7 +32,8 @@ export function Step1Name({ fullName, onFullNameChange, onAdvance }: Step1NamePr
     try {
       const repo = await createRepo.mutateAsync(fullName.trim());
       onAdvance(repo.id);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setFormError("Não foi possível cadastrar o repositório agora. Tente novamente.");
     }
   }

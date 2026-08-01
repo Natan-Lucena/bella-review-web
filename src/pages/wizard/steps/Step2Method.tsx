@@ -7,7 +7,9 @@ import { SelectableCard } from "../../../components/SelectableCard";
 import type { IntegrationMethod } from "../wizardReducer";
 
 type Step2MethodProps = {
-  method: IntegrationMethod | null;
+  // Já resolvido pelo WizardPage (state.method ?? "action") — uma única
+  // fonte pro default "action", não duplicada aqui também.
+  method: IntegrationMethod;
   onMethodChange: (method: IntegrationMethod) => void;
   onBack: () => void;
   onNext: () => void;
@@ -19,8 +21,12 @@ const ARROW_KEYS = new Set(["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"]);
 // — ver PRD 06). Pré-selecionado em "action" por padrão (é o caminho vendido
 // na Tela 1). O container implementa a navegação por seta do teclado que
 // `SelectableCard` documenta como responsabilidade de quem o usa.
-export function Step2Method({ method, onMethodChange, onBack, onNext }: Step2MethodProps) {
-  const selected = method ?? "action";
+export function Step2Method({
+  method: selected,
+  onMethodChange,
+  onBack,
+  onNext,
+}: Step2MethodProps) {
   const actionRef = useRef<HTMLDivElement>(null);
   const webhookRef = useRef<HTMLDivElement>(null);
 

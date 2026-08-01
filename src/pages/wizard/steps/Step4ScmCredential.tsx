@@ -35,7 +35,8 @@ export function Step4ScmCredential({
     try {
       await setScmCredential.mutateAsync(pat.trim());
       onAdvance();
-    } catch {
+    } catch (error) {
+      console.error(error);
       setFormError("Não foi possível salvar o token agora. Tente novamente.");
     }
   }
