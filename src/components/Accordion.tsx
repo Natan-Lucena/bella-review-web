@@ -2,7 +2,10 @@ import { useId, useState } from "react";
 import type { ReactNode } from "react";
 
 type AccordionProps = {
-  title: string;
+  // ReactNode (não só string) pra permitir um cabeçalho composto (ex.: título +
+  // texto de status) — o nome acessível do botão continua sendo todo o texto
+  // visível ali dentro, então isso não quebra leitor de tela.
+  title: ReactNode;
   defaultOpen?: boolean;
   children: ReactNode;
 };

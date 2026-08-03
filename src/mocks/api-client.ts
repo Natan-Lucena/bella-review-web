@@ -165,6 +165,8 @@ export async function createRepo(fullName: string): Promise<Repo> {
     scmCredential: null,
     actionTokenGenerated: false,
     webhookSecretGenerated: false,
+    actionTokenGeneratedAt: null,
+    webhookSecretGeneratedAt: null,
     config: {
       model: "gemini-2.5-flash",
       tokenLimit: 100000,
@@ -220,6 +222,7 @@ export async function generateActionToken(repoId: string): Promise<ActionTokenRe
   await delay(500);
   const repo = findRepoOrThrow(repoId);
   repo.actionTokenGenerated = true;
+  repo.actionTokenGeneratedAt = new Date().toISOString();
   return {
     type: "action_token",
     token: generateSecretValue("bella_at"),
@@ -232,6 +235,7 @@ export async function generateWebhookSecret(repoId: string): Promise<WebhookSecr
   await delay(500);
   const repo = findRepoOrThrow(repoId);
   repo.webhookSecretGenerated = true;
+  repo.webhookSecretGeneratedAt = new Date().toISOString();
   return {
     type: "webhook_secret",
     secret: generateSecretValue("bella_whs"),
@@ -250,6 +254,48 @@ export async function updateRepoConfig(
   const repo = findRepoOrThrow(repoId);
   repo.config = { ...repo.config, ...patch };
   return repo.config;
+}
+
+export type CredentialStatus = { configured: boolean; updatedAt: string | null };
+export type SecretStatus = { generated: boolean; generatedAt: string | null };
+
+// Leitura só da Fase 1 (mock) — a API real não tem hoje um endpoint que
+// devolva o estado individual de cada credencial/config (ver PRD 07, "Nota
+// sobre a Fase 2"). Como Fase 1 é tudo em memória, a Tela 6 lê livremente daqui
+// em vez de vir de `GET /repos`, que só expõe o agregado `configComplete`. A
+// Fase 2 vai precisar de um endpoint de verdade pra isso (ou aceitar blocos
+// nascendo "colapsados", sem pré-preenchimento — já documentado como
+// alternativa).
+export type RepoSettingsSnapshot = {
+  llm: CredentialStatus;
+  scm: CredentialStatus;
+  actionToken: SecretStatus;
+  webhookSecret: SecretStatus;
+  config: RepoConfig;
+};
+
+export async function getRepoSettings(repoId: string): Promise<RepoSettingsSnapshot> {
+  await delay(300);
+  const repo = findRepoOrThrow(repoId);
+  return {
+    llm: {
+      configured: repo.llmCredential !== null,
+      updatedAt: repo.llmCredential?.updatedAt ?? null,
+    },
+    scm: {
+      configured: repo.scmCredential !== null,
+      updatedAt: repo.scmCredential?.updatedAt ?? null,
+    },
+    actionToken: {
+      generated: repo.actionTokenGenerated,
+      generatedAt: repo.actionTokenGeneratedAt,
+    },
+    webhookSecret: {
+      generated: repo.webhookSecretGenerated,
+      generatedAt: repo.webhookSecretGeneratedAt,
+    },
+    config: repo.config,
+  };
 }
 
 export async function getDashboard(repoId: string, period: DashboardPeriod): Promise<Dashboard> {

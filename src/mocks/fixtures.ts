@@ -36,6 +36,11 @@ export type RepoRecord = {
   scmCredential: Credential | null;
   actionTokenGenerated: boolean;
   webhookSecretGenerated: boolean;
+  // Só para a Tela 6 (Configurações) — "Token gerado em {data}"/"Segredo
+  // gerado em {data}". A API real não expõe isso hoje (ver PRD 07, "Nota
+  // sobre a Fase 2"); a Fase 1 lê livremente porque tudo é mock em memória.
+  actionTokenGeneratedAt: string | null;
+  webhookSecretGeneratedAt: string | null;
   config: RepoConfig;
   dashboardUsageByPeriod: Record<DashboardPeriod, DashboardUsage>;
   reviewRuns: ReviewRunRecord[];
@@ -193,6 +198,8 @@ const bellaApi: RepoRecord = {
   },
   actionTokenGenerated: true,
   webhookSecretGenerated: true,
+  actionTokenGeneratedAt: isoOffset(60, 0),
+  webhookSecretGeneratedAt: isoOffset(60, 0),
   config: {
     model: "gemini-2.5-flash",
     tokenLimit: 100000,
@@ -263,6 +270,8 @@ const bellaWeb: RepoRecord = {
   },
   actionTokenGenerated: true,
   webhookSecretGenerated: false,
+  actionTokenGeneratedAt: isoOffset(10, 0),
+  webhookSecretGeneratedAt: null,
   config: {
     model: "gemini-2.5-flash",
     tokenLimit: 100000,
@@ -360,6 +369,8 @@ const bellaAction: RepoRecord = {
   scmCredential: null,
   actionTokenGenerated: false,
   webhookSecretGenerated: false,
+  actionTokenGeneratedAt: null,
+  webhookSecretGeneratedAt: null,
   config: {
     model: "gemini-2.5-flash",
     tokenLimit: 100000,

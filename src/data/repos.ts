@@ -23,6 +23,16 @@ export function useRepo(repoId: string) {
   return { ...query, data: query.data?.repos.find((repo) => repo.id === repoId) };
 }
 
+// Leitura só da Fase 1 (mock) pra Tela 6 (Configurações) — ver
+// apiClient.getRepoSettings, "Nota sobre a Fase 2". Invalidada junto com o
+// resto porque a queryKey começa com "repos" (invalidateQueries por prefixo).
+export function useRepoSettings(repoId: string) {
+  return useQuery({
+    queryKey: queryKeys.repoSettings(repoId),
+    queryFn: () => apiClient.getRepoSettings(repoId),
+  });
+}
+
 // Todas as mutations de repositório invalidam ["repos"] inteiro ao suceder —
 // a Fase 1 não tem granularidade fina (a Fase 2 pode refinar).
 function useInvalidateRepos() {
