@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import * as apiClient from "../mocks/api-client";
+import { apiClient } from "./api-client";
 import type { DashboardPeriod } from "../types/dashboard";
 import { queryKeys } from "./query-keys";
 

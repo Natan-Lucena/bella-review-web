@@ -1,4 +1,4 @@
-import type { Comment } from "./comment";
+import type { CommentSeverity, CommentStatus } from "./comment";
 
 export type ReviewRunStatus = "queued" | "processing" | "completed" | "failed";
 export type ReviewRunTrigger = "action" | "webhook";
@@ -29,6 +29,20 @@ export type ReviewRunTurn = {
   errorReason: string | null;
 };
 
+// GET .../review-runs/:runId devolve os comentários num shape mais estreito
+// que GET .../comments (Tela 10) — sem createdAt/reviewRunId/prNumber (a
+// execução já está implícita no contexto desta tela). Ver PRD da Fase 2.
+export type ReviewRunComment = {
+  id: string;
+  file: string;
+  line: number;
+  category: string;
+  severity: CommentSeverity;
+  body: string;
+  status: CommentStatus;
+  externalId: string | null;
+};
+
 export type ReviewRunDetail = {
   id: string;
   prNumber: number;
@@ -36,7 +50,7 @@ export type ReviewRunDetail = {
   status: ReviewRunStatus;
   errorReason: string | null;
   turns: ReviewRunTurn[];
-  comments: Comment[];
+  comments: ReviewRunComment[];
 };
 
 export type ReviewRunFilters = {

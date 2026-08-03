@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import * as apiClient from "../mocks/api-client";
+import { apiClient } from "./api-client";
 import type { CommentFilters } from "../types/comment";
 import { queryKeys } from "./query-keys";
 

@@ -4,13 +4,11 @@ export type Repo = {
   id: string;
   fullName: string;
   active: boolean;
+  // Exige as 4 credenciais (incluindo webhook_secret, mesmo pra quem só usa
+  // a Action) — regra real do backend (`GET /repos`), não computável de
+  // outro jeito no cliente: não existe endpoint que exponha o status
+  // individual de cada credencial. Ver PRD da Fase 2.
   configComplete: boolean;
-  // Estado calculado só no frontend (mock, por enquanto) — llm + scm + (token
-  // da Action OU segredo de webhook). Mais permissivo que `configComplete`
-  // (que exige as 4 credenciais), porque um repositório configurado só com a
-  // Action é um caso plenamente funcional, não "incompleto" — ver
-  // frontend-especificacao-telas.md, Tela 4, nota sobre `configComplete`.
-  readyForReview: boolean;
   llmProvider: string;
   model: string;
 };

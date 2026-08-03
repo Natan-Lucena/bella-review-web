@@ -1,8 +1,10 @@
 import { useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter, Route, Routes, useSearchParams } from "react-router-dom";
 
+import { resetMockData } from "../mocks/api-client";
 import { SessionProvider } from "../data/SessionProvider";
 import { useSession } from "../data/useSession";
 import { RequireAuth } from "./RequireAuth";
@@ -36,7 +38,7 @@ function ProtectedRoutes() {
 function LoginThenProtectedRoutes() {
   const { login, isAuthenticated } = useSession();
   useEffect(() => {
-    login();
+    login({ id: "test-user", email: "test@example.com" });
   }, [login]);
 
   if (!isAuthenticated) {
@@ -46,28 +48,39 @@ function LoginThenProtectedRoutes() {
   return <ProtectedRoutes />;
 }
 
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>{ui}</SessionProvider>
+    </QueryClientProvider>,
+  );
+}
+
+beforeEach(() => {
+  resetMockData();
+});
+
 describe("RequireAuth", () => {
-  it("redirects to /login, preserving the original path + query string", () => {
-    render(
-      <SessionProvider>
-        <MemoryRouter initialEntries={["/repos?tab=runs"]}>
-          <ProtectedRoutes />
-        </MemoryRouter>
-      </SessionProvider>,
+  it("redirects to /login, preserving the original path + query string", async () => {
+    renderWithProviders(
+      <MemoryRouter initialEntries={["/repos?tab=runs"]}>
+        <ProtectedRoutes />
+      </MemoryRouter>,
     );
 
-    expect(screen.getByText("Login page (redirect=/repos?tab=runs)")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Login page (redirect=/repos?tab=runs)"),
+    ).toBeInTheDocument();
   });
 
-  it("renders the protected content once authenticated", () => {
-    render(
-      <SessionProvider>
-        <MemoryRouter initialEntries={["/repos"]}>
-          <LoginThenProtectedRoutes />
-        </MemoryRouter>
-      </SessionProvider>,
+  it("renders the protected content once authenticated", async () => {
+    renderWithProviders(
+      <MemoryRouter initialEntries={["/repos"]}>
+        <LoginThenProtectedRoutes />
+      </MemoryRouter>,
     );
 
-    expect(screen.getByText("Repos page")).toBeInTheDocument();
+    expect(await screen.findByText("Repos page")).toBeInTheDocument();
   });
 });
