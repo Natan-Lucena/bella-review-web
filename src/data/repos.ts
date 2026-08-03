@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getRepoSettings } from "../mocks/api-client";
 import type { RepoConfigPatch } from "../types/repo-config";
 import { apiClient } from "./api-client";
 import { queryKeys } from "./query-keys";
@@ -22,17 +21,6 @@ export function useRepos() {
 export function useRepo(repoId: string) {
   const query = useRepos();
   return { ...query, data: query.data?.repos.find((repo) => repo.id === repoId) };
-}
-
-// Leitura só da Fase 1 (mock) pra Tela 6 (Configurações) — não existe
-// endpoint real equivalente (ver PRD da Fase 2, "Tela 6 escreve às cegas"),
-// por isso importa `getRepoSettings` direto do mock em vez de passar pelo
-// barrel de src/data/api-client.ts. Removido quando a Tela 6 for adaptada.
-export function useRepoSettings(repoId: string) {
-  return useQuery({
-    queryKey: queryKeys.repoSettings(repoId),
-    queryFn: () => getRepoSettings(repoId),
-  });
 }
 
 // Todas as mutations de repositório invalidam ["repos"] inteiro ao suceder —

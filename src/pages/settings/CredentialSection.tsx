@@ -3,18 +3,14 @@ import { useState } from "react";
 import { Accordion } from "../../components/Accordion";
 import { Button } from "../../components/Button";
 import { PasswordField } from "../../components/PasswordField";
-import { formatDate } from "../../lib/format-date";
-import type { CredentialStatus } from "../../mocks/api-client";
 
 type CredentialSectionProps = {
   title: string;
-  status: CredentialStatus;
   fieldLabel: string;
   htmlForPrefix: string;
   placeholder: string;
   hint: string;
-  saveLabelNew: string;
-  saveLabelReplace: string;
+  saveLabel: string;
   isPending: boolean;
   onSave: (value: string) => Promise<unknown>;
   // Link pra onde gerar o valor deste campo (ex.: a página de criação de
@@ -25,16 +21,17 @@ type CredentialSectionProps = {
 // Blocos 6.1/6.2 (Credencial LLM/SCM) — composição idêntica, só muda rótulo,
 // mutation e texto de ajuda (ver PRD 07, "Composição": vale extrair um
 // componente local em vez de duplicar o mesmo JSX duas vezes). O valor real
-// nunca é reexibido depois de salvo — só "•••••••• configurado em {data}".
+// nunca é reexibido depois de salvo — e, na Fase 2, sem endpoint de leitura,
+// nem sequer sabemos se já existe uma credencial salva (ver PRD da Fase 2,
+// "Tela 6 escreve às cegas") — por isso o bloco nasce sempre "colapsado",
+// sem status nenhum, e o botão é sempre "Salvar", nunca "Substituir".
 export function CredentialSection({
   title,
-  status,
   fieldLabel,
   htmlForPrefix,
   placeholder,
   hint,
-  saveLabelNew,
-  saveLabelReplace,
+  saveLabel,
   isPending,
   onSave,
   helpLink,
@@ -42,11 +39,6 @@ export function CredentialSection({
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const valid = value.trim().length > 0;
-
-  const statusText =
-    status.configured && status.updatedAt
-      ? `•••••••• configurado em ${formatDate(status.updatedAt)}`
-      : "Ainda não configurada";
 
   async function handleSave() {
     if (!valid) {
@@ -63,14 +55,7 @@ export function CredentialSection({
   }
 
   return (
-    <Accordion
-      title={
-        <div>
-          <div className="text-[17px] font-medium tracking-tight text-ink">{title}</div>
-          <div className="mt-2 text-[13.5px] leading-relaxed text-ink-muted">{statusText}</div>
-        </div>
-      }
-    >
+    <Accordion title={<div className="text-[17px] font-medium tracking-tight text-ink">{title}</div>}>
       <div className="flex flex-col gap-4">
         <PasswordField
           label={fieldLabel}
@@ -99,7 +84,7 @@ export function CredentialSection({
             loading={isPending}
             onClick={handleSave}
           >
-            {status.configured ? saveLabelReplace : saveLabelNew}
+            {saveLabel}
           </Button>
         </div>
       </div>
