@@ -93,7 +93,7 @@ export function RunsPage() {
     { header: "Comentários", render: (run) => run.commentCount },
     { header: "Tokens", render: (run) => formatNumber(run.totalTokens) },
     {
-      header: "Iniciada",
+      header: "Início",
       render: (run) =>
         run.startedAt ? (
           <span title={formatExactDateTime(run.startedAt)}>

@@ -41,8 +41,10 @@ function formatExactDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-// dd/mm/aaaa HH:mm (UTC) — o tooltip com o timestamp exato ao lado do texto
-// relativo.
+// dd/mm/aaaa HH:mm — o tooltip com o timestamp exato ao lado do texto
+// relativo. UTC fixo de propósito (mesma escolha de format-date.ts), não o
+// fuso do navegador: mantém o valor determinístico entre máquinas/CI e
+// consistente com o resto do app, que também nunca mostra hora local.
 export function formatExactDateTime(iso: string): string {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
