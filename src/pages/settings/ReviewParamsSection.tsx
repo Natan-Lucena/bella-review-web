@@ -4,48 +4,51 @@ import { Accordion } from "../../components/Accordion";
 import { Button } from "../../components/Button";
 import { FormField } from "../../components/FormField";
 import { TagInput } from "../../components/TagInput";
-import type { RepoConfig, RepoConfigPatch } from "../../types/repo-config";
+import type { RepoConfigPatch } from "../../types/repo-config";
 
 const CATEGORY_SUGGESTIONS = ["security", "performance", "correctness", "error-handling"];
 const MODEL_SUGGESTIONS = ["gemini-2.5-flash", "gemini-2.5-pro"];
+const MODEL_PLACEHOLDER = "gemini-2.5-flash";
+const TOKEN_LIMIT_PLACEHOLDER = "100000";
+// Valor neutro só pra o slider ter uma posição inicial — não é enviado
+// a menos que o usuário efetivamente mexa nele (ver `temperatureTouched`).
+const TEMPERATURE_NEUTRAL = 1;
 
 type ReviewParamsSectionProps = {
-  config: RepoConfig;
   isPending: boolean;
   onSave: (patch: RepoConfigPatch) => Promise<unknown>;
 };
 
-function arraysEqual(a: string[], b: string[]): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
-}
-
 // Bloco 6.4 — Parâmetros de review. Deliberadamente fora do wizard (os
-// padrões já funcionam sozinhos). O PATCH só envia os campos que realmente
-// mudaram em relação ao `config` recebido — patch parcial de verdade, não
-// reenvia tudo a cada save. Ver PRD 07, Bloco 6.4.
-export function ReviewParamsSection({ config, isPending, onSave }: ReviewParamsSectionProps) {
-  const [model, setModel] = useState(config.model);
-  const [tokenLimit, setTokenLimit] = useState(config.tokenLimit);
-  const [temperature, setTemperature] = useState(config.temperature);
-  const [enabledCategories, setEnabledCategories] = useState(config.enabledCategories);
+// padrões já funcionam sozinhos). Sem endpoint de leitura (ver PRD da Fase 2,
+// "Tela 6 escreve às cegas"), este bloco não sabe os valores atuais — cada
+// campo nasce vazio/neutro (só placeholder visual) e rastreia se o usuário
+// de fato mexeu nele. O PATCH enviado inclui só os campos tocados, nunca um
+// valor "razoável" não mexido — evita sobrescrever silenciosamente uma
+// configuração real já salva no backend.
+export function ReviewParamsSection({ isPending, onSave }: ReviewParamsSectionProps) {
+  const [model, setModel] = useState("");
+  const [modelTouched, setModelTouched] = useState(false);
+  const [tokenLimit, setTokenLimit] = useState("");
+  const [tokenLimitTouched, setTokenLimitTouched] = useState(false);
+  const [temperature, setTemperature] = useState(TEMPERATURE_NEUTRAL);
+  const [temperatureTouched, setTemperatureTouched] = useState(false);
+  const [enabledCategories, setEnabledCategories] = useState<string[]>([]);
+  const [categoriesTouched, setCategoriesTouched] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  function markDirty() {
-    setSaved(false);
-  }
 
   async function handleSave() {
     const patch: RepoConfigPatch = {};
-    if (model !== config.model) {
-      patch.model = model;
+    if (modelTouched && model.trim().length > 0) {
+      patch.model = model.trim();
     }
-    if (tokenLimit !== config.tokenLimit) {
-      patch.tokenLimit = tokenLimit;
+    if (tokenLimitTouched && tokenLimit.trim().length > 0) {
+      patch.tokenLimit = Number(tokenLimit);
     }
-    if (temperature !== config.temperature) {
+    if (temperatureTouched) {
       patch.temperature = temperature;
     }
-    if (!arraysEqual(enabledCategories, config.enabledCategories)) {
+    if (categoriesTouched) {
       patch.enabledCategories = enabledCategories;
     }
     if (Object.keys(patch).length === 0) {
@@ -65,9 +68,10 @@ export function ReviewParamsSection({ config, isPending, onSave }: ReviewParamsS
             value={model}
             onChange={(event) => {
               setModel(event.target.value);
-              markDirty();
+              setModelTouched(true);
+              setSaved(false);
             }}
-            placeholder="gemini-2.5-flash"
+            placeholder={MODEL_PLACEHOLDER}
             className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
           />
           <datalist id="settings-model-options">
@@ -85,9 +89,11 @@ export function ReviewParamsSection({ config, isPending, onSave }: ReviewParamsS
               min={1}
               value={tokenLimit}
               onChange={(event) => {
-                setTokenLimit(Number(event.target.value));
-                markDirty();
+                setTokenLimit(event.target.value);
+                setTokenLimitTouched(true);
+                setSaved(false);
               }}
+              placeholder={TOKEN_LIMIT_PLACEHOLDER}
               className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
             />
           </FormField>
@@ -98,7 +104,10 @@ export function ReviewParamsSection({ config, isPending, onSave }: ReviewParamsS
             htmlFor="settings-temperature"
             className="mb-3 flex max-w-[420px] justify-between text-[13.5px] text-ink-muted"
           >
-            Temperatura <span className="font-mono text-ink">{temperature}</span>
+            Temperatura{" "}
+            <span className="font-mono text-ink">
+              {temperatureTouched ? temperature : "não alterada"}
+            </span>
           </label>
           <input
             id="settings-temperature"
@@ -109,7 +118,8 @@ export function ReviewParamsSection({ config, isPending, onSave }: ReviewParamsS
             value={temperature}
             onChange={(event) => {
               setTemperature(Number(event.target.value));
-              markDirty();
+              setTemperatureTouched(true);
+              setSaved(false);
             }}
             className="w-full max-w-[420px] accent-accent"
           />
@@ -121,7 +131,8 @@ export function ReviewParamsSection({ config, isPending, onSave }: ReviewParamsS
             value={enabledCategories}
             onChange={(next) => {
               setEnabledCategories(next);
-              markDirty();
+              setCategoriesTouched(true);
+              setSaved(false);
             }}
             suggestions={CATEGORY_SUGGESTIONS}
           />
