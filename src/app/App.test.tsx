@@ -96,16 +96,22 @@ describe("App routing", () => {
     expect(screen.getByRole("heading", { name: "Meus repositórios" })).toBeInTheDocument();
   });
 
-  it("renders the repo area (breadcrumb + tabs) and the dashboard on the index route", () => {
-    renderAuthenticatedAt("/repos/abc123");
+  it("renders the repo area (breadcrumb + tabs) and the dashboard on the index route", async () => {
+    renderAuthenticatedAt("/repos/repo-bella-api");
+    expect(await screen.findByText("Natan-Lucena/bella-reviewer-api")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Painel" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("heading", { name: "Painel" })).toBeInTheDocument();
   });
 
-  it("renders the runs page under the repo area, with the Runs tab active", () => {
-    renderAuthenticatedAt("/repos/abc123/runs");
+  it("renders the runs page under the repo area, with the Runs tab active", async () => {
+    renderAuthenticatedAt("/repos/repo-bella-api/runs");
+    expect(await screen.findByRole("heading", { name: "Execuções" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Execuções" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("heading", { name: "Execuções" })).toBeInTheDocument();
+  });
+
+  it("redirects an unknown repo id (repo_not_found) to Meus Repositórios", async () => {
+    renderAuthenticatedAt("/repos/does-not-exist");
+    expect(await screen.findByRole("heading", { name: "Meus repositórios" })).toBeInTheDocument();
   });
 
   it("renders the wizard full-screen, without the AppLayout header", () => {

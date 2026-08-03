@@ -1,4 +1,5 @@
 import type { BadgeTone } from "../components/Badge";
+import type { ServiceState } from "../types/repo";
 
 type BadgeProps = { tone: BadgeTone; label: string };
 
@@ -17,4 +18,17 @@ export function repoConfigBadgeProps(readyForReview: boolean): BadgeProps {
   return readyForReview
     ? { tone: "success", label: "Pronto para revisar" }
     : { tone: "warning", label: "Configuração pendente" };
+}
+
+// Cabeçalho comum a Painel/Execuções/Comentários/Configurações (RepoAreaLayout)
+// — três valores, diferente do badge de Meus Repositórios acima (dois
+// valores). Ver frontend-especificacao-telas.md, Tela 7, "Cabeçalho".
+const SERVICE_STATE: Record<ServiceState, BadgeProps> = {
+  active: { tone: "success", label: "Ativo" },
+  configuration_pending: { tone: "warning", label: "Configuração pendente" },
+  inactive: { tone: "neutral", label: "Inativo" },
+};
+
+export function serviceStateBadgeProps(serviceState: ServiceState): BadgeProps {
+  return SERVICE_STATE[serviceState];
 }
