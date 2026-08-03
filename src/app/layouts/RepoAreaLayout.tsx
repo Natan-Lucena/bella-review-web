@@ -14,7 +14,7 @@ import { toServiceState } from "../../lib/service-state";
 // dentro de cada bloco). Ver frontend-especificacao-telas.md, Tela 7.
 export function RepoAreaLayout() {
   const { id } = useParams<{ id: string }>();
-  const { data: repo, isPending, isError, refetch } = useRepo(id ?? "");
+  const { data: repo, isPending, isError, isFetching, refetch } = useRepo(id ?? "");
 
   if (!id) {
     return null;
@@ -36,7 +36,17 @@ export function RepoAreaLayout() {
 
   // repo_not_found (404) — ver frontend-especificacao-telas.md, Tela 6,
   // "Estados gerais": redireciona silenciosamente pra Meus Repositórios.
-  if (!isPending && !repo) {
+  //
+  // `isFetching` entra aqui por um bug real pego por um teste de jornada
+  // (criar um repo no wizard e navegar direto pro painel dele): a mutation
+  // de criação só invalida ["repos"] (não escreve o repo novo no cache), e
+  // como não havia nenhum observer ativo de useRepos() durante o wizard, a
+  // invalidação não refaz a busca ali — só quando este layout monta e
+  // observa a query pela primeira vez. Nesse instante `isPending` já é
+  // `false` (o cache antigo, sem o repo novo, ainda está lá), mas um
+  // refetch acabou de começar; sem checar `isFetching`, isso redirecionava
+  // pra Meus Repositórios antes do refetch trazer o repo recém-criado.
+  if (!isPending && !isFetching && !repo) {
     return <Navigate to="/repos" replace />;
   }
 
