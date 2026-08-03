@@ -4,6 +4,7 @@ import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { PasswordField } from "../../../components/PasswordField";
 import { useSetScmCredential } from "../../../data/repos";
+import { GITHUB_TOKEN_URL } from "../../../lib/github-url";
 
 type Step4ScmCredentialProps = {
   repoId: string;
@@ -58,6 +59,14 @@ export function Step4ScmCredential({
           onChange={onPatChange}
           error={formError ?? undefined}
         />
+        <a
+          href={GITHUB_TOKEN_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2.5 inline-block text-[13px] text-accent hover:underline"
+        >
+          Gerar token no GitHub
+        </a>
         <p className="mt-2.5 text-[12.5px] leading-relaxed text-ink-muted">
           É o backend que publica, não a Action — por isso ele é necessário mesmo em quem só usa a
           Action. A Action só envia o diff para análise.

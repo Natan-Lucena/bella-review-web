@@ -87,4 +87,32 @@ describe("CredentialSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Chave da API")).toHaveValue("minha-chave-123");
   });
+
+  it("omits the help link by default, and renders it (opening in a new tab) when provided", async () => {
+    const { rerender } = render(
+      <CredentialSection
+        {...BASE_PROPS}
+        status={{ configured: false, updatedAt: null }}
+        onSave={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Credencial do LLM/ }));
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+
+    rerender(
+      <CredentialSection
+        {...BASE_PROPS}
+        status={{ configured: false, updatedAt: null }}
+        onSave={vi.fn()}
+        helpLink={{
+          label: "Gerar token no GitHub",
+          href: "https://github.com/settings/tokens/new",
+        }}
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Gerar token no GitHub" });
+    expect(link).toHaveAttribute("href", "https://github.com/settings/tokens/new");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer");
+  });
 });

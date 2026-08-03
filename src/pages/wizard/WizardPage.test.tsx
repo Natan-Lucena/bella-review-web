@@ -44,6 +44,10 @@ async function completeStep3(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function completeStep4(user: ReturnType<typeof userEvent.setup>) {
+  expect(screen.getByRole("link", { name: "Gerar token no GitHub" })).toHaveAttribute(
+    "href",
+    expect.stringContaining("github.com/settings/tokens/new"),
+  );
   await user.type(screen.getByLabelText("Personal Access Token"), "ghp_abc123");
   await user.click(screen.getByRole("button", { name: "Continuar" }));
   await screen.findByRole("button", { name: /^Gerar/ });

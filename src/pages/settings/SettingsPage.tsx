@@ -13,6 +13,7 @@ import {
   useUpdateRepoConfig,
 } from "../../data/repos";
 import { formatDate } from "../../lib/format-date";
+import { GITHUB_TOKEN_URL } from "../../lib/github-url";
 import { CredentialSection } from "./CredentialSection";
 import { ReviewParamsSection } from "./ReviewParamsSection";
 import { SecretCard } from "./SecretCard";
@@ -85,6 +86,7 @@ export function SettingsPage() {
         saveLabelReplace="Substituir PAT"
         isPending={setScmCredential.isPending}
         onSave={(pat) => setScmCredential.mutateAsync(pat)}
+        helpLink={{ label: "Gerar token no GitHub", href: GITHUB_TOKEN_URL }}
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
