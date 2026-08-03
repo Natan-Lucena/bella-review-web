@@ -56,8 +56,14 @@ function isoOffset(daysAgo: number, hoursAgo = 0): string {
   return date.toISOString();
 }
 
+// Um padStart ingênuo faria os dígitos que variam por seed caírem sempre no
+// final da string, deixando os 7 primeiros caracteres (a versão curta
+// exibida na Tela 8) idênticos em quase toda execução — dá uma dispersão
+// pseudo-aleatória (hash multiplicativo de Knuth) pra parecer um SHA de
+// verdade, com o prefixo curto realmente distinguível entre execuções.
 function commitSha(seed: number): string {
-  return seed.toString(16).padStart(40, "0");
+  const scrambled = ((seed * 2654435761) >>> 0).toString(16).padStart(8, "0");
+  return scrambled.repeat(5).slice(0, 40);
 }
 
 function agentTurn(
