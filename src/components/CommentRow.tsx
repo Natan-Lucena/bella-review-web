@@ -10,10 +10,12 @@ import { Card } from "./Card";
 type CommentRowProps = {
   comment: Comment;
   repoId: string;
-  // Tela 10 (histórico entre execuções) mostra o link do PR e trunca o corpo;
-  // Tela 9 (detalhe de uma execução já filtrada) omite os dois — mesma lista
-  // compacta, sem repetir informação já visível no cabeçalho da tela. Ver
-  // PRD 09, "considerar extrair um CommentRow compartilhado entre os dois PRDs".
+  // Tela 9 (detalhe de uma execução já filtrada, PRD 09 — único consumidor
+  // hoje) omite o link do PR e o truncamento, já que a execução já está
+  // implícita no contexto da tela. Tela 10 (histórico entre execuções, PRD
+  // 10 — ainda não implementada) vai precisar dos dois de volta: mesma lista
+  // compacta, sem repetir informação já visível no cabeçalho. Ver PRD 09,
+  // "considerar extrair um CommentRow compartilhado entre os dois PRDs".
   showPr?: boolean;
   clampable?: boolean;
 };
