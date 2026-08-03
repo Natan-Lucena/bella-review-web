@@ -56,4 +56,12 @@ describe("SecretRevealModal", () => {
     await userEvent.keyboard("{Escape}");
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("does not close on a click outside the dialog (the overlay has no click handler)", async () => {
+    const onClose = vi.fn();
+    render(<SecretRevealModal open kind="action_token" value="tok" onClose={onClose} />);
+    const overlay = screen.getByRole("dialog").parentElement!;
+    await userEvent.click(overlay);
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
