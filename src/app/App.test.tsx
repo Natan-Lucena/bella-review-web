@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
+import * as apiClient from "../mocks/api-client";
 import { SessionProvider } from "../data/SessionProvider";
 import { useSession } from "../data/useSession";
 import { App } from "./App";
@@ -54,6 +55,10 @@ function renderAuthenticatedAt(path: string) {
     </QueryClientProvider>,
   );
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("App routing", () => {
   it("renders the landing page at /", () => {
@@ -112,6 +117,19 @@ describe("App routing", () => {
   it("redirects an unknown repo id (repo_not_found) to Meus Repositórios", async () => {
     renderAuthenticatedAt("/repos/does-not-exist");
     expect(await screen.findByRole("heading", { name: "Meus repositórios" })).toBeInTheDocument();
+  });
+
+  it("shows a retryable error instead of redirecting when the repo fetch itself fails", async () => {
+    vi.spyOn(apiClient, "listRepos").mockRejectedValueOnce(new Error("network error"));
+    renderAuthenticatedAt("/repos/repo-bella-api");
+
+    expect(
+      await screen.findByText("Não foi possível carregar este repositório"),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Meus repositórios" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+    expect(await screen.findByText("Natan-Lucena/bella-reviewer-api")).toBeInTheDocument();
   });
 
   it("renders the wizard full-screen, without the AppLayout header", () => {
