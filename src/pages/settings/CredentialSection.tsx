@@ -17,9 +17,8 @@ type CredentialSectionProps = {
   saveLabelReplace: string;
   isPending: boolean;
   onSave: (value: string) => Promise<unknown>;
-  // Link opcional pra onde gerar o valor deste campo (ex.: a página de
-  // criação de PAT do GitHub) — nem toda credencial tem um destino óbvio
-  // pra isso, então fica de fora por padrão.
+  // Link pra onde gerar o valor deste campo (ex.: a página de criação de
+  // PAT do GitHub) — nem toda credencial tem um destino óbvio pra isso.
   helpLink?: { label: string; href: string };
 };
 
