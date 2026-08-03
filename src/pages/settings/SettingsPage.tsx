@@ -3,16 +3,13 @@ import { useParams } from "react-router-dom";
 
 import { PageHeader } from "../../components/PageHeader";
 import { SecretRevealModal } from "../../components/SecretRevealModal";
-import { Skeleton } from "../../components/Skeleton";
 import {
   useGenerateActionToken,
   useGenerateWebhookSecret,
-  useRepoSettings,
   useSetLlmCredential,
   useSetScmCredential,
   useUpdateRepoConfig,
 } from "../../data/repos";
-import { formatDate } from "../../lib/format-date";
 import { GITHUB_TOKEN_URL } from "../../lib/github-url";
 import { CredentialSection } from "./CredentialSection";
 import { ReviewParamsSection } from "./ReviewParamsSection";
@@ -26,27 +23,20 @@ type RevealedModal =
 // Mesmas mutations do Wizard (PRD 06), mas fora de sequência: cada bloco é
 // independente, com seu próprio botão de salvar — não existe uma ordem
 // obrigatória nem um estado compartilhado entre eles. Ver PRD 07.
+//
+// Fase 2: sem endpoint de leitura de credenciais/config (ver PRD da Fase 2,
+// "Tela 6 escreve às cegas"), não há nada pra buscar antes de renderizar —
+// os blocos nascem direto, sem skeleton nem status pré-preenchido.
 export function SettingsPage() {
   const { id } = useParams<{ id: string }>();
   const repoId = id ?? "";
 
-  const { data: settings, isPending } = useRepoSettings(repoId);
   const setLlmCredential = useSetLlmCredential(repoId);
   const setScmCredential = useSetScmCredential(repoId);
   const generateActionToken = useGenerateActionToken(repoId);
   const generateWebhookSecret = useGenerateWebhookSecret(repoId);
   const updateRepoConfig = useUpdateRepoConfig(repoId);
   const [modal, setModal] = useState<RevealedModal | null>(null);
-
-  if (isPending || !settings) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Skeleton shape="block" height="6rem" />
-        <Skeleton shape="block" height="6rem" />
-        <Skeleton shape="block" height="10rem" />
-      </div>
-    );
-  }
 
   async function handleGenerateAction() {
     const response = await generateActionToken.mutateAsync();
@@ -64,26 +54,22 @@ export function SettingsPage() {
 
       <CredentialSection
         title="Credencial do LLM · Gemini"
-        status={settings.llm}
         fieldLabel="Chave da API"
         htmlForPrefix="settings-llm"
         placeholder="cole sua chave de API do Gemini"
-        hint="A chave nunca é devolvida pela API depois de salva — só sabemos que existe e quando foi atualizada."
-        saveLabelNew="Salvar chave"
-        saveLabelReplace="Substituir chave"
+        hint="A chave nunca é devolvida pela API depois de salva — e, sem endpoint de leitura, nem esta tela sabe se já existe uma configurada. Salvar aqui sempre substitui a atual, se houver."
+        saveLabel="Salvar chave"
         isPending={setLlmCredential.isPending}
         onSave={(apiKey) => setLlmCredential.mutateAsync(apiKey)}
       />
 
       <CredentialSection
         title="Credencial do GitHub · PAT"
-        status={settings.scm}
         fieldLabel="Personal Access Token"
         htmlForPrefix="settings-scm"
         placeholder="ghp_..."
-        hint="Usado pelo backend para publicar os comentários de revisão diretamente no seu Pull Request — é o backend que publica, não a Action. Precisa de permissão de leitura e escrita em Pull Requests."
-        saveLabelNew="Salvar PAT"
-        saveLabelReplace="Substituir PAT"
+        hint="Usado pelo backend para publicar os comentários de revisão diretamente no seu Pull Request — é o backend que publica, não a Action. Precisa de permissão de leitura e escrita em Pull Requests. Salvar aqui sempre substitui o PAT atual, se houver."
+        saveLabel="Salvar PAT"
         isPending={setScmCredential.isPending}
         onSave={(pat) => setScmCredential.mutateAsync(pat)}
         helpLink={{ label: "Gerar token no GitHub", href: GITHUB_TOKEN_URL }}
@@ -92,35 +78,26 @@ export function SettingsPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         <SecretCard
           title="GitHub Action"
-          statusText={
-            settings.actionToken.generated && settings.actionToken.generatedAt
-              ? `Token gerado em ${formatDate(settings.actionToken.generatedAt)}`
-              : "Nenhum token gerado ainda"
-          }
-          generateLabel={settings.actionToken.generated ? "Gerar novo token" : "Gerar token"}
-          rotateWarningText="Gerar um novo token invalida o anterior imediatamente."
-          alreadyGenerated={settings.actionToken.generated}
+          statusText="Sem endpoint de leitura, não sabemos se já existe um token gerado."
+          generateLabel="Gerar novo token"
+          rotateWarningText="Se já existir um token gerado, esta ação invalida o anterior imediatamente."
+          alreadyGenerated
           isPending={generateActionToken.isPending}
           onGenerate={handleGenerateAction}
         />
         <SecretCard
           title="Webhook nativo"
-          statusText={
-            settings.webhookSecret.generated && settings.webhookSecret.generatedAt
-              ? `Segredo gerado em ${formatDate(settings.webhookSecret.generatedAt)}`
-              : "Nenhum segredo gerado ainda"
-          }
-          generateLabel={settings.webhookSecret.generated ? "Gerar novo segredo" : "Gerar segredo"}
-          rotateWarningText="Gerar um novo segredo invalida o anterior imediatamente."
+          statusText="Sem endpoint de leitura, não sabemos se já existe um segredo gerado."
+          generateLabel="Gerar novo segredo"
+          rotateWarningText="Se já existir um segredo gerado, esta ação invalida o anterior imediatamente."
           helpText="Só necessário se você quiser integrar via webhook nativo do GitHub, além de (ou em vez de) usar a Action."
-          alreadyGenerated={settings.webhookSecret.generated}
+          alreadyGenerated
           isPending={generateWebhookSecret.isPending}
           onGenerate={handleGenerateWebhook}
         />
       </div>
 
       <ReviewParamsSection
-        config={settings.config}
         isPending={updateRepoConfig.isPending}
         onSave={(patch) => updateRepoConfig.mutateAsync(patch)}
       />
