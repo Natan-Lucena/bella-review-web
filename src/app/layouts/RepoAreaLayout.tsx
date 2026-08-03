@@ -2,6 +2,7 @@ import { Navigate, Outlet, useParams } from "react-router-dom";
 
 import { Badge } from "../../components/Badge";
 import { Breadcrumb } from "../../components/Breadcrumb";
+import { EmptyState } from "../../components/EmptyState";
 import { RepoAreaTabs } from "../../components/RepoAreaTabs";
 import { useRepo } from "../../data/repos";
 import { serviceStateBadgeProps } from "../../lib/status-badges";
@@ -13,10 +14,24 @@ import { toServiceState } from "../../lib/service-state";
 // dentro de cada bloco). Ver frontend-especificacao-telas.md, Tela 7.
 export function RepoAreaLayout() {
   const { id } = useParams<{ id: string }>();
-  const { data: repo, isPending } = useRepo(id ?? "");
+  const { data: repo, isPending, isError, refetch } = useRepo(id ?? "");
 
   if (!id) {
     return null;
+  }
+
+  // Uma falha de rede/500 em useRepos() também deixa `repo` undefined — sem
+  // distinguir isso de "esse id não existe", redirecionaria pra Meus
+  // Repositórios mesmo quando um simples retry resolveria (mesmo bug já
+  // corrigido em ReposListPage, PRD 05).
+  if (!isPending && isError) {
+    return (
+      <EmptyState
+        title="Não foi possível carregar este repositório"
+        description="Algo deu errado ao buscar os dados. Tente novamente."
+        action={{ label: "Tentar novamente", onClick: () => refetch() }}
+      />
+    );
   }
 
   // repo_not_found (404) — ver frontend-especificacao-telas.md, Tela 6,
