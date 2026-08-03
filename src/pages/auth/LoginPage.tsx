@@ -39,8 +39,7 @@ export function LoginPage() {
       const redirectTo = searchParams.get("redirect");
       navigate(redirectTo || "/repos", { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, searchParams, navigate]);
 
   const [state, formAction] = useActionState<LoginActionState>(async () => {
     if (!canSubmit) {
