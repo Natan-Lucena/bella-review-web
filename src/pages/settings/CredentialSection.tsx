@@ -17,6 +17,10 @@ type CredentialSectionProps = {
   saveLabelReplace: string;
   isPending: boolean;
   onSave: (value: string) => Promise<unknown>;
+  // Link opcional pra onde gerar o valor deste campo (ex.: a página de
+  // criação de PAT do GitHub) — nem toda credencial tem um destino óbvio
+  // pra isso, então fica de fora por padrão.
+  helpLink?: { label: string; href: string };
 };
 
 // Blocos 6.1/6.2 (Credencial LLM/SCM) — composição idêntica, só muda rótulo,
@@ -34,6 +38,7 @@ export function CredentialSection({
   saveLabelReplace,
   isPending,
   onSave,
+  helpLink,
 }: CredentialSectionProps) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +81,16 @@ export function CredentialSection({
           onChange={setValue}
           error={error ?? undefined}
         />
+        {helpLink && (
+          <a
+            href={helpLink.href}
+            target="_blank"
+            rel="noreferrer"
+            className="-mt-2 inline-block text-[13px] text-accent hover:underline"
+          >
+            {helpLink.label}
+          </a>
+        )}
         <p className="text-[12.5px] leading-relaxed text-ink-muted">{hint}</p>
         <div>
           <Button

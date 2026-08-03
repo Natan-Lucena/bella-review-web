@@ -42,6 +42,21 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Nenhum segredo gerado ainda")).toBeInTheDocument();
   });
 
+  it("shows the 'gerar token no GitHub' link only on the SCM (PAT) block, not the LLM one", async () => {
+    renderSettings("repo-bella-api");
+    const user = userEvent.setup();
+    await screen.findAllByText(/•••••••• configurado em/);
+
+    await user.click(screen.getByRole("button", { name: /Credencial do LLM/ }));
+    expect(screen.queryByRole("link", { name: "Gerar token no GitHub" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Credencial do GitHub/ }));
+    expect(screen.getByRole("link", { name: "Gerar token no GitHub" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("github.com/settings/tokens/new"),
+    );
+  });
+
   it("saves the LLM credential and reflects the new status after refetch", async () => {
     renderSettings("repo-bella-action");
     const user = userEvent.setup();
