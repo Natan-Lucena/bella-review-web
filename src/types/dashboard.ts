@@ -15,13 +15,9 @@ export type DashboardUsage = {
 };
 
 export type Dashboard = {
-  repo: {
-    id: string;
-    fullName: string;
-    serviceState: ServiceState;
-  };
   period: DashboardPeriod;
   usage: DashboardUsage;
   activeLlmProvider: string;
   activeModel: string;
+  serviceState: ServiceState;
 };

@@ -1,4 +1,4 @@
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { FormField } from "../../components/FormField";
@@ -18,7 +18,7 @@ type LoginActionState = {
 export function LoginPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login: markAuthenticated } = useSession();
+  const { isAuthenticated, login: markAuthenticated } = useSession();
   const login = useLogin();
 
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
@@ -26,15 +26,29 @@ export function LoginPage() {
   const showAccountCreatedNotice = searchParams.get("notice") === "account-created";
   const canSubmit = email.trim().length > 0 && password.length > 0;
 
+  // A navegação pós-login mora num efeito reativo a `isAuthenticated`, não
+  // dentro da action: o `setQueryData` do `login()` (SessionProvider) notifica
+  // os observers do TanStack Query de forma assíncrona (`notifyManager`), então
+  // chamar `navigate()` logo depois de `markAuthenticated(user)`, no mesmo
+  // bloco síncrono, corre pra rota de destino ANTES do contexto de sessão
+  // propagar `isAuthenticated: true` — o `RequireAuth` de lá leria o valor
+  // antigo (`false`) e voltaria pro login (bounce), só percebido numa jornada
+  // completa (login → rota protegida), nunca num teste isolado de tela.
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectTo = searchParams.get("redirect");
+      navigate(redirectTo || "/repos", { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
   const [state, formAction] = useActionState<LoginActionState>(async () => {
     if (!canSubmit) {
       return {};
     }
     try {
-      await login.mutateAsync({ email, password });
-      markAuthenticated();
-      const redirectTo = searchParams.get("redirect");
-      navigate(redirectTo || "/repos", { replace: true });
+      const user = await login.mutateAsync({ email, password });
+      markAuthenticated(user);
       return {};
     } catch (error) {
       // A mensagem pro usuário é sempre genérica (nunca distinguir "senha

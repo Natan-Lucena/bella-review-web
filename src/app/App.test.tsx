@@ -31,7 +31,7 @@ function renderAt(path: string) {
 function LoginThenMountApp({ path }: { path: string }) {
   const { login, isAuthenticated } = useSession();
   useEffect(() => {
-    login();
+    login({ id: "test-user", email: "test@example.com" });
   }, [login]);
 
   if (!isAuthenticated) {
@@ -90,9 +90,9 @@ describe("App routing", () => {
     expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
   });
 
-  it("redirects unauthenticated access to /repos to the login page", () => {
+  it("redirects unauthenticated access to /repos to the login page", async () => {
     renderAt("/repos");
-    expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Entrar" })).toBeInTheDocument();
   });
 
   it("renders the app shell (header + link) for an authenticated /repos", () => {
@@ -140,9 +140,9 @@ describe("App routing", () => {
     expect(screen.queryByRole("link", { name: "Meus repositórios" })).not.toBeInTheDocument();
   });
 
-  it("redirects unauthenticated access to /repos/new to the login page", () => {
+  it("redirects unauthenticated access to /repos/new to the login page", async () => {
     renderAt("/repos/new");
-    expect(screen.getByRole("heading", { name: "Entrar" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Entrar" })).toBeInTheDocument();
   });
 
   it("renders the not-found page for an unknown route", () => {

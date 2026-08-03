@@ -12,8 +12,15 @@ type RequireAuthProps = {
 // para voltar exatamente para lá depois do login. Ver
 // frontend-especificacao-telas.md, "Comportamentos transversais".
 export function RequireAuth({ children }: RequireAuthProps) {
-  const { isAuthenticated } = useSession();
+  const { isAuthenticated, isPending } = useSession();
   const location = useLocation();
+
+  // Checagem inicial de sessão (GET /auth/me) ainda em voo — sem isto,
+  // redirecionaria pro login por um instante mesmo com um cookie de sessão
+  // válido, já que `isAuthenticated` começa `false` até a resposta chegar.
+  if (isPending) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     const redirectTo = `${location.pathname}${location.search}`;

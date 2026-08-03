@@ -63,19 +63,18 @@ describe("listRepos", () => {
     const bellaWeb = repos.find((repo) => repo.id === "repo-bella-web");
     const bellaAction = repos.find((repo) => repo.id === "repo-bella-action");
 
-    expect(bellaApi).toMatchObject({ configComplete: true, readyForReview: true, active: true });
+    expect(bellaApi).toMatchObject({ configComplete: true, active: true });
     // Action + LLM + SCM configurados, mas sem webhook secret => configComplete
-    // permanece false para sempre (ver frontend-especificacao-telas.md, item 1),
-    // mas readyForReview já é true (token da Action cobre o caminho recomendado).
+    // permanece false para sempre (ver frontend-especificacao-telas.md, item 1
+    // — regra real do backend, sem um readyForReview mais permissivo pra
+    // compensar, ver PRD da Fase 2).
     expect(bellaWeb).toMatchObject({
       configComplete: false,
-      readyForReview: true,
       active: true,
       llmProvider: "Gemini",
     });
     expect(bellaAction).toMatchObject({
       configComplete: false,
-      readyForReview: false,
       active: false,
       llmProvider: "",
       model: "",
@@ -85,9 +84,14 @@ describe("listRepos", () => {
 
 describe("createRepo", () => {
   it("never rejects, regardless of the fullName value", async () => {
-    const repo = await createRepo("qualquer-coisa sem formato válido");
-    expect(repo.fullName).toBe("qualquer-coisa sem formato válido");
-    expect(repo.configComplete).toBe(false);
+    // O retorno de createRepo é só { id } de propósito (espelha o shape real
+    // de POST /repos, bem diferente do item de GET /repos) — confirma o
+    // resto via listRepos, o caminho de leitura real.
+    const created = await createRepo("qualquer-coisa sem formato válido");
+    const { repos } = await listRepos();
+    const repo = repos.find((candidate) => candidate.id === created.id);
+    expect(repo?.fullName).toBe("qualquer-coisa sem formato válido");
+    expect(repo?.configComplete).toBe(false);
   });
 
   it("is reflected in a subsequent listRepos call", async () => {
@@ -145,7 +149,7 @@ describe("getDashboard", () => {
 
   it("reports serviceState 'inactive' for a deactivated repo", async () => {
     const dashboard = await getDashboard("repo-bella-action", "30d");
-    expect(dashboard.repo.serviceState).toBe("inactive");
+    expect(dashboard.serviceState).toBe("inactive");
   });
 
   it("rejects with repo_not_found for an unknown repo id", async () => {
@@ -179,12 +183,16 @@ describe("listReviewRuns", () => {
 });
 
 describe("getReviewRunDetail", () => {
-  it("returns the run's own comments and turns", async () => {
+  it("returns the run's own comments and turns, in the narrower run-detail shape", async () => {
     const detail = await getReviewRunDetail("repo-bella-api", "run-bella-api-1");
     expect(detail.turns).toHaveLength(1);
-    expect(detail.comments.every((comment) => comment.reviewRunId === "run-bella-api-1")).toBe(
-      true,
-    );
+    expect(detail.comments.length).toBeGreaterThan(0);
+    // Shape mais estreito que listComments (Tela 10) — sem reviewRunId/
+    // prNumber/createdAt, a execução já está implícita no contexto. Ver
+    // types/review-run.ts, ReviewRunComment.
+    expect(detail.comments[0]).not.toHaveProperty("reviewRunId");
+    expect(detail.comments[0]).not.toHaveProperty("createdAt");
+    expect(detail.comments[0]).not.toHaveProperty("prNumber");
   });
 
   it("rejects with review_run_not_found for an unknown run id", async () => {

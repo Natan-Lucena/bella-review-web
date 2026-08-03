@@ -71,7 +71,7 @@ export function ReposListPage() {
       {showList && (
         <div className="flex flex-col gap-3">
           {repos.map((repo) => {
-            const badge = repoConfigBadgeProps(repo.readyForReview);
+            const badge = repoConfigBadgeProps(repo.configComplete);
             return (
               <Card
                 key={repo.id}
@@ -96,21 +96,6 @@ export function ReposListPage() {
               </Card>
             );
           })}
-        </div>
-      )}
-
-      {/* Medida de transição pra Fase 1 (mock): explica uma divergência
-          real do backend hoje (configComplete vs readyForReview), mas é um
-          detalhe de implementação que não deveria vazar pro usuário num
-          produto final. Remover quando a Fase 2 fizer o backend calcular
-          readyForReview de verdade (ver commit que introduziu esse campo). */}
-      {showList && (
-        <div className="rounded bg-severity-medium/[0.07] px-[18px] py-4 text-[13.5px] leading-[1.65] text-ink-muted">
-          <span className="text-severity-medium">Sobre o selo "pronto para revisar":</span> ele é
-          calculado aqui no painel a partir de chave do Gemini + PAT do GitHub + (token da Action{" "}
-          <span className="italic">ou</span> segredo de webhook). O campo{" "}
-          <span className="font-mono">configComplete</span> do backend exige os quatro ao mesmo
-          tempo, o que marcaria como incompleto quem seguiu o caminho recomendado.
         </div>
       )}
     </div>

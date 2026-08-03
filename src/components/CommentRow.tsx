@@ -7,8 +7,16 @@ import type { Comment } from "../types/comment";
 import { Badge } from "./Badge";
 import { Card } from "./Card";
 
+// Estrutural, não `Comment` direto: GET .../review-runs/:runId (Tela 9)
+// devolve comentários num shape mais estreito, sem reviewRunId/prNumber/
+// createdAt (a execução já está implícita no contexto da tela) — ver
+// types/review-run.ts, ReviewRunComment. `Comment` (Tela 10) continua
+// satisfazendo isto normalmente, por tipagem estrutural.
+type CommentRowData = Pick<Comment, "id" | "file" | "line" | "category" | "severity" | "body" | "status"> &
+  Partial<Pick<Comment, "reviewRunId" | "prNumber" | "createdAt">>;
+
 type CommentRowProps = {
-  comment: Comment;
+  comment: CommentRowData;
   repoId: string;
   // Tela 9 (detalhe de uma execução já filtrada, PRD 09 — único consumidor
   // hoje) omite o link do PR e o truncamento, já que a execução já está
@@ -46,9 +54,11 @@ export function CommentRow({ comment, repoId, showPr = true, clampable = true }:
         <Badge tone="neutral">{comment.category}</Badge>
         <Badge tone={severity.tone}>{severity.label}</Badge>
         <Badge tone={status.tone}>{status.label}</Badge>
-        <span className="ml-auto text-xs text-ink-muted">
-          {formatRelativeTime(comment.createdAt)}
-        </span>
+        {comment.createdAt && (
+          <span className="ml-auto text-xs text-ink-muted">
+            {formatRelativeTime(comment.createdAt)}
+          </span>
+        )}
       </div>
       <p
         onClick={clampable ? () => setExpanded((value) => !value) : undefined}

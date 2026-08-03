@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import * as apiClient from "../mocks/api-client";
+import { apiClient } from "./api-client";
 
 type Credentials = { email: string; password: string };
 

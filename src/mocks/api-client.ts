@@ -5,11 +5,12 @@ import type { ListReposResponse, Repo, ServiceState } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
   ListReviewRunsResponse,
+  ReviewRunComment,
   ReviewRunDetail,
   ReviewRunFilters,
   ReviewRunSummary,
 } from "../types/review-run";
-import type { LoginResponse, SignupResponse } from "../types/user";
+import type { LoginResponse, SignupResponse, User } from "../types/user";
 import { ApiError } from "../lib/api-error";
 import { seedRepos, seedUsers } from "./fixtures";
 import type { RepoRecord, ReviewRunRecord, SeedUser } from "./fixtures";
@@ -25,6 +26,11 @@ let users: SeedUser[] = structuredClone(seedUsers);
 let repos: RepoRecord[] = structuredClone(seedRepos);
 let nextRepoSeq = 1;
 let secretSeq = 1;
+// "Sessão" da Fase 1: o real usa um cookie httpOnly que o navegador manda
+// sozinho; aqui é só esse id em memória de módulo, setado por login() e lido
+// por getCurrentUser() — o suficiente pra SessionProvider (Fase 2) tratar os
+// dois clientes de forma idêntica via GET /auth/me. Ver PRD da Fase 2.
+let currentUserId: string | null = null;
 
 // Só para uso em testes: reinicia o dataset para o estado inicial dos fixtures.
 export function resetMockData(): void {
@@ -32,6 +38,7 @@ export function resetMockData(): void {
   repos = structuredClone(seedRepos);
   nextRepoSeq = 1;
   secretSeq = 1;
+  currentUserId = null;
 }
 
 function delay(ms: number): Promise<void> {
@@ -71,19 +78,11 @@ function toRepo(record: RepoRecord): Repo {
   const configComplete =
     hasCoreCredentials && record.actionTokenGenerated && record.webhookSecretGenerated;
 
-  // Mais permissivo que `configComplete`: um repositório configurado só com a
-  // Action (sem webhook) é plenamente funcional, não "incompleto" — ver
-  // frontend-especificacao-telas.md, Tela 4, nota sobre `configComplete`, e
-  // Repo.readyForReview.
-  const readyForReview =
-    hasCoreCredentials && (record.actionTokenGenerated || record.webhookSecretGenerated);
-
   return {
     id: record.id,
     fullName: record.fullName,
     active: record.active,
     configComplete,
-    readyForReview,
     llmProvider: record.llmCredential?.provider ?? "",
     model: record.llmCredential ? record.config.model : "",
   };
@@ -125,6 +124,22 @@ function toReviewRunSummary(repo: RepoRecord, run: ReviewRunRecord): ReviewRunSu
   };
 }
 
+// Espelha o shape mais estreito que GET .../review-runs/:runId de fato
+// devolve pros comentários embutidos (sem createdAt/reviewRunId/prNumber) —
+// ver types/review-run.ts, ReviewRunComment.
+function toReviewRunComment(comment: Comment): ReviewRunComment {
+  return {
+    id: comment.id,
+    file: comment.file,
+    line: comment.line,
+    category: comment.category,
+    severity: comment.severity,
+    body: comment.body,
+    status: comment.status,
+    externalId: comment.externalId,
+  };
+}
+
 export async function signup(email: string, password: string): Promise<SignupResponse> {
   await delay(400);
   const alreadyExists = users.some((user) => user.email.toLowerCase() === email.toLowerCase());
@@ -145,6 +160,16 @@ export async function login(email: string, password: string): Promise<LoginRespo
   if (!user) {
     throw new ApiError("invalid_credentials");
   }
+  currentUserId = user.id;
+  return { id: user.id, email: user.email };
+}
+
+export async function getCurrentUser(): Promise<User> {
+  await delay(200);
+  const user = currentUserId ? users.find((candidate) => candidate.id === currentUserId) : null;
+  if (!user) {
+    throw new ApiError("not_authenticated");
+  }
   return { id: user.id, email: user.email };
 }
 
@@ -155,7 +180,11 @@ export async function listRepos(): Promise<ListReposResponse> {
 
 // O backend não verifica duplicidade nem existência real no GitHub — esta
 // função nunca rejeita (ver frontend-especificacao-telas.md, Tela 5, Passo 1).
-export async function createRepo(fullName: string): Promise<Repo> {
+// Tipo de retorno é só `{ id }` de propósito, não `Repo` — o real `POST
+// /repos` devolve um shape bem diferente do item de `GET /repos` (sem
+// configComplete/llmProvider/model), e `.id` é a única coisa que quem chama
+// isto (o wizard) de fato usa. Ver PRD da Fase 2.
+export async function createRepo(fullName: string): Promise<{ id: string }> {
   await delay(500);
   const record: RepoRecord = {
     id: `repo-created-${nextRepoSeq++}`,
@@ -302,11 +331,11 @@ export async function getDashboard(repoId: string, period: DashboardPeriod): Pro
   await delay(350);
   const repo = findRepoOrThrow(repoId);
   return {
-    repo: { id: repo.id, fullName: repo.fullName, serviceState: toServiceState(repo) },
     period,
     usage: repo.dashboardUsageByPeriod[period],
     activeLlmProvider: repo.llmCredential?.provider ?? "",
     activeModel: repo.llmCredential ? repo.config.model : "",
+    serviceState: toServiceState(repo),
   };
 }
 
@@ -339,7 +368,9 @@ export async function getReviewRunDetail(repoId: string, runId: string): Promise
     status: run.status,
     errorReason: run.errorReason,
     turns: run.turns,
-    comments: repo.comments.filter((comment) => comment.reviewRunId === run.id),
+    comments: repo.comments
+      .filter((comment) => comment.reviewRunId === run.id)
+      .map(toReviewRunComment),
   };
 }
 
