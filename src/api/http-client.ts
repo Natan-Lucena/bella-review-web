@@ -41,7 +41,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
-  } catch {
+  } catch (error) {
+    // Mensagem pro usuário é sempre genérica, mas o erro real (timeout, CORS,
+    // DNS, etc.) vale logar pra depuração — só o texto exibido é opaco.
+    console.error(`Network request failed (${method} ${path}):`, error);
     throw new ApiError("network_error", "Não foi possível conectar ao servidor.");
   }
 
