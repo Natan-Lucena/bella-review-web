@@ -360,7 +360,14 @@ function matchesCommentFilters(comment: Comment, filters: CommentFilters): boole
   if (filters.prNumber !== undefined && comment.prNumber !== filters.prNumber) {
     return false;
   }
-  if (filters.category !== undefined && comment.category !== filters.category) {
+  // Categoria é texto livre (não um enum fechado, ao contrário de severity/
+  // status abaixo) — substring case-insensitive, não igualdade exata, senão
+  // digitar "sec" nunca acharia "security" até a palavra inteira ser
+  // completada. Ver frontend-especificacao-telas.md, Tela 10.
+  if (
+    filters.category !== undefined &&
+    !comment.category.toLowerCase().includes(filters.category.toLowerCase())
+  ) {
     return false;
   }
   if (filters.severity !== undefined && comment.severity !== filters.severity) {
