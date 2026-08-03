@@ -24,28 +24,25 @@ beforeEach(() => {
   resetMockData();
 });
 
+// Fase 2: sem endpoint de leitura de credenciais/config, a tela nasce direto
+// (sem skeleton) e nenhum bloco mostra status "configurado em {data}" — ver
+// ReviewParamsSection.test.tsx e CredentialSection.test.tsx pro
+// comportamento por-bloco do modelo "touched-only".
 describe("SettingsPage", () => {
-  it("shows a loading skeleton before the settings snapshot resolves", () => {
+  it("renders all four blocks immediately, with no pre-filled status", () => {
     renderSettings("repo-bella-api");
-    expect(screen.getAllByRole("presentation", { hidden: true }).length).toBeGreaterThan(0);
-  });
-
-  it("shows the configured status for both credentials of a fully-set-up repo", async () => {
-    renderSettings("repo-bella-api");
-    expect(await screen.findAllByText(/•••••••• configurado em/)).toHaveLength(2);
-  });
-
-  it("shows 'Ainda não configurada' for a repo with no credentials at all", async () => {
-    renderSettings("repo-bella-action");
-    expect(await screen.findAllByText("Ainda não configurada")).toHaveLength(2);
-    expect(screen.getByText("Nenhum token gerado ainda")).toBeInTheDocument();
-    expect(screen.getByText("Nenhum segredo gerado ainda")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Configurações" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Credencial do LLM/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Credencial do GitHub/ })).toBeInTheDocument();
+    expect(screen.getByText("GitHub Action")).toBeInTheDocument();
+    expect(screen.getByText("Webhook nativo")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Parâmetros de review" })).toBeInTheDocument();
+    expect(screen.queryByText(/configurado em/)).not.toBeInTheDocument();
   });
 
   it("shows the 'gerar token no GitHub' link only on the SCM (PAT) block, not the LLM one", async () => {
     renderSettings("repo-bella-api");
     const user = userEvent.setup();
-    await screen.findAllByText(/•••••••• configurado em/);
 
     await user.click(screen.getByRole("button", { name: /Credencial do LLM/ }));
     expect(screen.queryByRole("link", { name: "Gerar token no GitHub" })).not.toBeInTheDocument();
@@ -57,22 +54,26 @@ describe("SettingsPage", () => {
     );
   });
 
-  it("saves the LLM credential and reflects the new status after refetch", async () => {
+  it("saves the LLM credential and clears the field", async () => {
     renderSettings("repo-bella-action");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: /Credencial do LLM · Gemini/ }));
-    await user.type(screen.getByLabelText("Chave da API"), "nova-chave-123");
+    await user.click(screen.getByRole("button", { name: /Credencial do LLM · Gemini/ }));
+    const input = screen.getByLabelText("Chave da API");
+    await user.type(input, "nova-chave-123");
     await user.click(screen.getByRole("button", { name: "Salvar chave" }));
 
-    expect(await screen.findByText(/•••••••• configurado em/)).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("")).toBeInTheDocument();
   });
 
   it("generating an Action token opens the SecretRevealModal with the value, gated by the ack checkbox", async () => {
     renderSettings("repo-bella-action");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Gerar token" }));
+    // Sem endpoint de leitura, esta tela sempre exige confirmação antes de
+    // gerar (nunca assume "ainda não gerado" — ver PRD da Fase 2).
+    await user.click(screen.getByRole("button", { name: "Gerar novo token" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar rotação" }));
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Fechar" })).toBeDisabled();
@@ -86,32 +87,35 @@ describe("SettingsPage", () => {
     renderSettings("repo-bella-action");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Gerar segredo" }));
+    await user.click(screen.getByRole("button", { name: "Gerar novo segredo" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar rotação" }));
 
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveTextContent("URL do webhook");
     expect(dialog).toHaveTextContent("https://bella-reviewer-api.vercel.app/webhooks/github");
   });
 
-  it("requires confirmation before rotating an already-generated Action token", async () => {
-    renderSettings("repo-bella-api");
+  it("always requires confirmation before generating a token, even for a repo with no credentials at all", async () => {
+    renderSettings("repo-bella-action");
     const user = userEvent.setup();
 
-    const rotateButton = await screen.findByRole("button", { name: "Gerar novo token" });
-    await user.click(rotateButton);
+    const generateButton = screen.getByRole("button", { name: "Gerar novo token" });
+    await user.click(generateButton);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Se já existir um token gerado, esta ação invalida o anterior imediatamente."),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Confirmar rotação" }));
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
-  it("edits review params and sends only the changed fields", async () => {
+  it("edits review params and sends only the touched fields", async () => {
     renderSettings("repo-bella-api");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Parâmetros de review" }));
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
     const modelInput = screen.getByLabelText("Modelo");
-    await user.clear(modelInput);
     await user.type(modelInput, "gemini-2.5-pro");
     await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
 

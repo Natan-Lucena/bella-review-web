@@ -6,7 +6,6 @@ import type { ReviewRunFilters } from "../types/review-run";
 // os filtros não re-busca quando eles mudam (ver react.md, "TanStack Query v5").
 export const queryKeys = {
   repos: () => ["repos"] as const,
-  repoSettings: (repoId: string) => ["repos", repoId, "settings"] as const,
   repoDashboard: (repoId: string, period: DashboardPeriod) =>
     ["repos", repoId, "dashboard", period] as const,
   reviewRuns: (repoId: string, filters: ReviewRunFilters) =>
