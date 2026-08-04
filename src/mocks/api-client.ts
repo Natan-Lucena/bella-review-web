@@ -1,6 +1,7 @@
 import type { Comment, CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod, DashboardUsage } from "../types/dashboard";
+import type { GithubRepoOption, InstallActionResult, ListGithubReposResponse } from "../types/github";
 import type { ListReposResponse, Repo, ServiceState } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -244,6 +245,40 @@ export async function setScmCredential(repoId: string, pat: string): Promise<Cre
   };
   repo.scmCredential = credential;
   return credential;
+}
+
+// Fixture fixa (Fase 1) — na vida real vem de GET /user/repos, com o PAT que o
+// usuário acabou de colar; o mock nem confere se o pat "funciona" de verdade,
+// só se ele foi informado. Os dois primeiros nomes propositalmente coincidem
+// com repositórios do dataset seed (repo-bella-api/repo-bella-action), pra
+// exercitar `alreadyAdded: true` sem depender de um repo criado nesta sessão.
+const GITHUB_REPO_FIXTURES: Array<Omit<GithubRepoOption, "alreadyAdded">> = [
+  { fullName: "Natan-Lucena/bella-reviewer-api", private: true, defaultBranch: "main" },
+  { fullName: "Natan-Lucena/bella-review-action", private: false, defaultBranch: "main" },
+  { fullName: "Natan-Lucena/side-project", private: false, defaultBranch: "main" },
+  { fullName: "minha-org/outro-repositorio", private: true, defaultBranch: "trunk" },
+];
+
+export async function listGithubRepos(pat: string): Promise<ListGithubReposResponse> {
+  await delay(500);
+  if (!pat) {
+    throw new ApiError("validation_error", "pat is required");
+  }
+  return {
+    repos: GITHUB_REPO_FIXTURES.map((repo) => ({
+      ...repo,
+      alreadyAdded: repos.some((existing) => existing.fullName === repo.fullName),
+    })),
+  };
+}
+
+export async function installAction(repoId: string, pat: string): Promise<InstallActionResult> {
+  await delay(700);
+  const repo = findRepoOrThrow(repoId);
+  if (!pat) {
+    throw new ApiError("validation_error", "pat is required");
+  }
+  return { prUrl: `https://github.com/${repo.fullName}/pull/1` };
 }
 
 // Gera uma string nova a cada chamada — nunca reaproveita a anterior (rotação real).

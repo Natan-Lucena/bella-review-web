@@ -61,8 +61,11 @@ describe("App journeys", () => {
     await screen.findByText("Natan-Lucena/bella-reviewer-api");
     await user.click(screen.getByRole("link", { name: "Adicionar repositório" }));
 
-    // Wizard completo (método Action) até o final.
+    // Wizard completo (método Action) até o final — passo 1 pelo escape hatch
+    // manual (o fluxo de conexão com o GitHub em si já é coberto em
+    // WizardPage.test.tsx).
     await screen.findByRole("heading", { name: "Qual repositório a Bella vai revisar?" });
+    await user.click(screen.getByRole("button", { name: "Prefiro digitar o nome manualmente" }));
     await user.type(screen.getByLabelText("Nome do repositório"), "nova-org/repo-novo");
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 

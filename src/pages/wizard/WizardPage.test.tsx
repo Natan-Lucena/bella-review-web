@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -30,7 +30,11 @@ beforeEach(() => {
   resetMockData();
 });
 
+// Passo 1 nasce no fluxo de conexão com o GitHub (PRD 11) — os testes que só
+// precisam passar do Passo 1 sem exercitar esse fluxo em si usam o escape
+// hatch manual, que cai exatamente no formulário de antes da Fase 2.
 async function completeStep1(user: ReturnType<typeof userEvent.setup>, fullName: string) {
+  await user.click(screen.getByRole("button", { name: "Prefiro digitar o nome manualmente" }));
   await user.type(screen.getByLabelText("Nome do repositório"), fullName);
   await user.click(screen.getByRole("button", { name: "Continuar" }));
   await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
@@ -54,9 +58,11 @@ async function completeStep4(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("WizardPage", () => {
-  it("keeps 'Continuar' disabled on Step 1 until the fullName format is valid", async () => {
+  it("keeps 'Continuar' disabled on the manual fallback until the fullName format is valid", async () => {
     renderWizard();
     const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Prefiro digitar o nome manualmente" }));
+
     const button = screen.getByRole("button", { name: "Continuar" });
     expect(button).toBeDisabled();
 
@@ -70,6 +76,104 @@ describe("WizardPage", () => {
     await user.clear(input);
     await user.type(input, "minha-org/meu-repositorio");
     expect(button).toBeEnabled();
+  });
+
+  it("connects with a PAT, lists repos flagging the already-added ones, and picking one creates it", async () => {
+    renderWizard();
+    const user = userEvent.setup();
+
+    expect(screen.getByRole("heading", { name: "Qual repositório a Bella vai revisar?" })).toBeInTheDocument();
+    const connectButton = screen.getByRole("button", { name: "Conectar" });
+    expect(connectButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_connect_token");
+    expect(connectButton).toBeEnabled();
+    await user.click(connectButton);
+
+    await screen.findByRole("heading", { name: "Escolha o repositório" });
+    await screen.findByText("Natan-Lucena/side-project");
+
+    // Repo já cadastrado (fixture do seed) aparece desabilitado, com o badge certo.
+    const alreadyAddedButton = screen.getByRole("button", {
+      name: /Natan-Lucena\/bella-reviewer-api/,
+    });
+    expect(alreadyAddedButton).toBeDisabled();
+    expect(within(alreadyAddedButton).getByText("já adicionado")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Natan-Lucena\/side-project/ }));
+
+    await screen.findByRole("heading", { name: "Como instalar a Action?" });
+    expect(screen.getByText("Repositório: Natan-Lucena/side-project")).toBeInTheDocument();
+  });
+
+  it("filters the repo picker as the user types", async () => {
+    renderWizard();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_connect_token");
+    await user.click(screen.getByRole("button", { name: "Conectar" }));
+    await screen.findByText("Natan-Lucena/side-project");
+
+    await user.type(screen.getByLabelText("Buscar repositório"), "outro-repositorio");
+
+    expect(screen.queryByText("Natan-Lucena/side-project")).not.toBeInTheDocument();
+    expect(screen.getByText("minha-org/outro-repositorio")).toBeInTheDocument();
+  });
+
+  it("choosing 'vou colar eu mesmo' skips straight to Step 2, without calling install-action", async () => {
+    renderWizard();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_connect_token");
+    await user.click(screen.getByRole("button", { name: "Conectar" }));
+    await screen.findByText("Natan-Lucena/side-project");
+    await user.click(screen.getByRole("button", { name: /Natan-Lucena\/side-project/ }));
+    await screen.findByRole("heading", { name: "Como instalar a Action?" });
+
+    // "Vou colar eu mesmo" já vem selecionado por padrão.
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+
+    await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
+  });
+
+  it("choosing the automatic install shows a consent notice, then the opened PR link before advancing", async () => {
+    renderWizard();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_connect_token");
+    await user.click(screen.getByRole("button", { name: "Conectar" }));
+    await screen.findByText("Natan-Lucena/side-project");
+    await user.click(screen.getByRole("button", { name: /Natan-Lucena\/side-project/ }));
+    await screen.findByRole("heading", { name: "Como instalar a Action?" });
+
+    await user.click(screen.getByRole("radio", { name: /Deixa a Bella abrir o Pull Request/ }));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByText(/vai usar o GitHub que você acabou de conectar/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Confirmar e abrir PR" }));
+
+    const prLink = await screen.findByRole("link", { name: "Abrir PR no GitHub" });
+    expect(prLink).toHaveAttribute("href", "https://github.com/Natan-Lucena/side-project/pull/1");
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
+  });
+
+  it("pre-fills Step 4's PAT field with the token connected back in Step 1", async () => {
+    renderWizard();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_reused_token");
+    await user.click(screen.getByRole("button", { name: "Conectar" }));
+    await screen.findByText("Natan-Lucena/side-project");
+    await user.click(screen.getByRole("button", { name: /Natan-Lucena\/side-project/ }));
+    await screen.findByRole("heading", { name: "Como instalar a Action?" });
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+
+    await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "Sua chave do Gemini" });
+    await user.type(screen.getByLabelText("Chave da API"), "gemini-key-123");
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+
+    await screen.findByRole("heading", { name: "Seu Personal Access Token do GitHub" });
+    expect(screen.getByLabelText("Personal Access Token")).toHaveValue("ghp_reused_token");
   });
 
   it("completes the full happy path for the Action method", async () => {
@@ -174,6 +278,10 @@ describe("WizardPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Voltar" }));
     await screen.findByRole("heading", { name: "Qual repositório a Bella vai revisar?" });
+    // Volta pro sub-passo padrão (conectar) — a navegação local do Passo 1
+    // não é retomada, mas o valor em si sobrevive no reducer, visível de novo
+    // ao reabrir o formulário manual.
+    await user.click(screen.getByRole("button", { name: "Prefiro digitar o nome manualmente" }));
     expect(screen.getByLabelText("Nome do repositório")).toHaveValue("org/repo-back");
   });
 

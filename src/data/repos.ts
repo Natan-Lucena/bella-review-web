@@ -54,6 +54,21 @@ export function useSetScmCredential(repoId: string) {
   });
 }
 
+// Onboarding-only: nenhum dos dois invalida ["repos"] — não persistem nada
+// por si só (ver PRD 11). O repositório em si já foi criado via
+// useCreateRepo antes de qualquer um dos dois ser chamado.
+export function useListGithubRepos() {
+  return useMutation({
+    mutationFn: (pat: string) => apiClient.listGithubRepos(pat),
+  });
+}
+
+export function useInstallAction(repoId: string) {
+  return useMutation({
+    mutationFn: (pat: string) => apiClient.installAction(repoId, pat),
+  });
+}
+
 export function useGenerateActionToken(repoId: string) {
   const invalidateRepos = useInvalidateRepos();
   return useMutation({
