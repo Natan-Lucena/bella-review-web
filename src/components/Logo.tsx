@@ -6,6 +6,6 @@ type LogoProps = {
 // "Identidade visual". Sempre decorativo: aria-hidden, nunca alt/role="img".
 // Arquivo em public/logo.png (servido em /logo.png), também usado como
 // favicon (ver index.html).
-export function Logo({ size = 30 }: LogoProps) {
+export function Logo({ size = 60 }: LogoProps) {
   return <img src="/logo.png" width={size} height={size} alt="" aria-hidden="true" />;
 }
