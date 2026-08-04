@@ -65,7 +65,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-20 border-b border-surface-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <Logo />
+            <Logo className="h-11 w-11 sm:h-[120px] sm:w-[120px]" />
             <span className="text-[17px] font-medium tracking-tight text-ink">Bella Reviewer</span>
           </div>
           <div className="flex items-center gap-2.5">
