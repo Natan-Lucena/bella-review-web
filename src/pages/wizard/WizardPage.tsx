@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Logo } from "../../components/Logo";
 import { StepProgress } from "../../components/StepProgress";
-import { Step1Name } from "./steps/Step1Name";
+import { Step1RepoSelection } from "./steps/Step1RepoSelection";
 import { Step2Method } from "./steps/Step2Method";
 import { Step3LlmCredential } from "./steps/Step3LlmCredential";
 import { Step4ScmCredential } from "./steps/Step4ScmCredential";
@@ -63,13 +63,13 @@ export function WizardPage() {
 
       <div className="mx-auto w-full max-w-2xl flex-1 px-8 py-11">
         {state.step === 1 && (
-          <Step1Name
+          <Step1RepoSelection
             fullName={state.fullName}
             onFullNameChange={(value) => dispatch({ type: "SET_FIELD", field: "fullName", value })}
-            onAdvance={(repoId) => {
-              dispatch({ type: "SET_REPO_ID", repoId });
-              dispatch({ type: "ADVANCE" });
-            }}
+            pat={state.pat}
+            onPatChange={(value) => dispatch({ type: "SET_FIELD", field: "pat", value })}
+            onRepoCreated={(repoId) => dispatch({ type: "SET_REPO_ID", repoId })}
+            onAdvance={() => dispatch({ type: "ADVANCE" })}
           />
         )}
 

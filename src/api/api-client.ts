@@ -1,6 +1,7 @@
 import type { CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod } from "../types/dashboard";
+import type { InstallActionResult, ListGithubReposResponse } from "../types/github";
 import type { ListReposResponse } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -47,6 +48,17 @@ export function setLlmCredential(repoId: string, apiKey: string): Promise<Creden
 
 export function setScmCredential(repoId: string, pat: string): Promise<Credential> {
   return request(`/repos/${repoId}/credentials/scm`, { method: "POST", body: { pat } });
+}
+
+// Onboarding-only: o pat nunca é persistido por essas duas chamadas — só
+// pelo setScmCredential acima, quando o usuário de fato confirma o passo de
+// credencial SCM do wizard. Ver backend-prds/15-....md.
+export function listGithubRepos(pat: string): Promise<ListGithubReposResponse> {
+  return request("/github/repos", { method: "POST", body: { pat } });
+}
+
+export function installAction(repoId: string, pat: string): Promise<InstallActionResult> {
+  return request(`/repos/${repoId}/install-action`, { method: "POST", body: { pat } });
 }
 
 export function generateActionToken(repoId: string): Promise<ActionTokenResponse> {
