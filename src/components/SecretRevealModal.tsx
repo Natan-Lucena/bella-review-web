@@ -8,6 +8,9 @@ type SecretRevealModalProps = {
   kind: "action_token" | "webhook_secret";
   value: string;
   webhookUrl?: string;
+  // Só usado pra montar o link direto do secret de Action — sem endpoint de
+  // leitura (Fase 2), a Tela 6 nem sempre sabe o fullName do repositório.
+  repoFullName?: string;
   onClose: () => void;
 };
 
@@ -18,7 +21,7 @@ const COPY: Record<
   action_token: {
     title: "Token da Action gerado",
     instruction:
-      "Configure este valor como o secret BELLA_TOKEN do repositório no GitHub: Settings → Secrets and variables → Actions → New repository secret.",
+      "Configure este valor como o secret BELLA_TOKEN do repositório no GitHub — Repository secret, não Environment secret (repositórios com o app do Vercel instalado ganham ambientes \"Production\"/\"Preview\" que também aparecem nessa tela; um secret criado neles não fica visível pra este workflow).",
     valueLabel: "Token",
   },
   webhook_secret: {
@@ -39,6 +42,7 @@ export function SecretRevealModal({
   kind,
   value,
   webhookUrl,
+  repoFullName,
   onClose,
 }: SecretRevealModalProps) {
   if (!open) {
@@ -54,6 +58,7 @@ export function SecretRevealModal({
       kind={kind}
       value={value}
       webhookUrl={webhookUrl}
+      repoFullName={repoFullName}
       onClose={onClose}
     />
   );
@@ -61,7 +66,13 @@ export function SecretRevealModal({
 
 type SecretRevealDialogProps = Omit<SecretRevealModalProps, "open">;
 
-function SecretRevealDialog({ kind, value, webhookUrl, onClose }: SecretRevealDialogProps) {
+function SecretRevealDialog({
+  kind,
+  value,
+  webhookUrl,
+  repoFullName,
+  onClose,
+}: SecretRevealDialogProps) {
   const [ack, setAck] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -99,6 +110,17 @@ function SecretRevealDialog({ kind, value, webhookUrl, onClose }: SecretRevealDi
         </div>
 
         <p className="mt-4 text-sm text-ink-muted">{copy.instruction}</p>
+
+        {kind === "action_token" && repoFullName && (
+          <a
+            href={`https://github.com/${repoFullName}/settings/secrets/actions/new`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-block text-sm text-accent hover:underline"
+          >
+            Abrir a tela de novo secret no GitHub
+          </a>
+        )}
 
         <label className="mt-4 flex items-center gap-2 text-sm text-ink">
           <input type="checkbox" checked={ack} onChange={(event) => setAck(event.target.checked)} />

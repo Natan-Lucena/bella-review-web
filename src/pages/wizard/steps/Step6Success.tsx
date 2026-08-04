@@ -48,10 +48,20 @@ export function Step6Success({
           <SecretValueBlock label="Seu token" value={revealedSecret.value} />
           <p className="mt-5 text-[14.5px] leading-relaxed text-ink-muted">
             Configure este valor como o secret{" "}
-            <span className="font-mono text-ink">BELLA_TOKEN</span> do repositório: Settings →
-            Secrets and variables → Actions → New repository secret. Depois, cole o passo abaixo no
-            seu workflow.
+            <span className="font-mono text-ink">BELLA_TOKEN</span> do repositório —{" "}
+            <span className="font-medium text-ink">Repository secret, não Environment secret</span>{" "}
+            (repositórios com o app do Vercel instalado ganham ambientes "Production"/"Preview" que
+            também aparecem nessa tela; um secret criado neles não fica visível pra este workflow).
+            Depois, cole o passo abaixo no seu workflow.
           </p>
+          <a
+            href={`https://github.com/${fullName}/settings/secrets/actions/new`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2.5 inline-block text-[13px] text-accent hover:underline"
+          >
+            Abrir a tela de novo secret no GitHub
+          </a>
           <div className="mt-4">
             <CodeBlock code={ACTION_SNIPPET} showDots={false} />
           </div>

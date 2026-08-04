@@ -6,6 +6,7 @@ import { SecretRevealModal } from "../../components/SecretRevealModal";
 import {
   useGenerateActionToken,
   useGenerateWebhookSecret,
+  useRepo,
   useSetLlmCredential,
   useSetScmCredential,
   useUpdateRepoConfig,
@@ -31,6 +32,10 @@ export function SettingsPage() {
   const { id } = useParams<{ id: string }>();
   const repoId = id ?? "";
 
+  // Só pra montar o link direto do secret no GitHub no modal abaixo — já
+  // vem do cache populado pelo RepoAreaLayout (mesma query ["repos"]), não é
+  // uma chamada nova.
+  const { data: repo } = useRepo(repoId);
   const setLlmCredential = useSetLlmCredential(repoId);
   const setScmCredential = useSetScmCredential(repoId);
   const generateActionToken = useGenerateActionToken(repoId);
@@ -108,6 +113,7 @@ export function SettingsPage() {
           kind={modal.kind}
           value={modal.value}
           webhookUrl={modal.kind === "webhook_secret" ? modal.webhookUrl : undefined}
+          repoFullName={repo?.fullName}
           onClose={() => setModal(null)}
         />
       )}
