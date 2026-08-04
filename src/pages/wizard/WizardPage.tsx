@@ -105,6 +105,7 @@ export function WizardPage() {
         {state.step === 5 && state.repoId && (
           <Step5GenerateSecret
             repoId={state.repoId}
+            fullName={state.fullName}
             method={method}
             revealedSecret={state.revealedSecret}
             onReveal={(secret) => dispatch({ type: "REVEAL_SECRET", secret })}
