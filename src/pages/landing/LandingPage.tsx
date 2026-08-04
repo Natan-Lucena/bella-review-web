@@ -109,7 +109,7 @@ export function LandingPage() {
                   "radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 68%)",
               }}
             >
-              <Logo size={400} />
+              <Logo size={1000} />
             </div>
           </div>
         </section>
