@@ -61,7 +61,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
       <Link to="/" className="flex items-center gap-2.5">
-        <Logo />
+        <Logo className="h-11 w-11 sm:h-[120px] sm:w-[120px]" />
         <span className="text-[17px] font-medium text-ink">Bella Reviewer</span>
       </Link>
 
