@@ -6,6 +6,7 @@ import type { IntegrationMethod, RevealedSecret } from "../wizardReducer";
 
 type Step5GenerateSecretProps = {
   repoId: string;
+  fullName: string;
   method: IntegrationMethod;
   revealedSecret: RevealedSecret | null;
   onReveal: (secret: RevealedSecret) => void;
@@ -40,6 +41,7 @@ const COPY = {
 // qualquer forma). Ver PRD 06, Passo 5a/5b.
 export function Step5GenerateSecret({
   repoId,
+  fullName,
   method,
   revealedSecret,
   onReveal,
@@ -86,6 +88,16 @@ export function Step5GenerateSecret({
           <p className="rounded bg-severity-medium/[0.08] px-4 py-3 text-[13px] leading-relaxed text-severity-medium">
             {copy.warning}
           </p>
+          {revealedSecret.kind === "action_token" && (
+            <a
+              href={`https://github.com/${fullName}/settings/secrets/actions/new`}
+              target="_blank"
+              rel="noreferrer"
+              className="-mt-2 inline-block text-[13px] text-accent hover:underline"
+            >
+              Abrir a tela de novo secret no GitHub (Repository secret, não Environment secret)
+            </a>
+          )}
           <div className="flex gap-3">
             <Button variant="primary" onClick={onAdvance}>
               Continuar

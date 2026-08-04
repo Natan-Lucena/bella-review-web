@@ -198,7 +198,13 @@ describe("WizardPage", () => {
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Gerar token" }));
 
+    // O Passo 5 é o momento em que o token é de fato gerado pela primeira
+    // vez — o link direto pro secret precisa estar aqui, não só no Passo 6
+    // (que só reexibe o mesmo valor).
     expect(await screen.findByText("Seu token")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Abrir a tela de novo secret no GitHub/ }),
+    ).toHaveAttribute("href", "https://github.com/minha-org/repo-action/settings/secrets/actions/new");
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 
     expect(
