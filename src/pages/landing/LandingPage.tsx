@@ -102,15 +102,7 @@ export function LandingPage() {
             </div>
           </div>
           <div className="flex justify-center">
-            <div
-              className="flex h-[220px] w-[220px] items-center justify-center rounded-full md:h-[300px] md:w-[300px]"
-              style={{
-                background:
-                  "radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 68%)",
-              }}
-            >
-              <Logo size={1000} />
-            </div>
+            <Logo size={1000} />
           </div>
         </section>
 
