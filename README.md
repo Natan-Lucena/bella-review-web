@@ -31,6 +31,12 @@ pnpm dev
 
 ## Estado do projeto
 
-Em desenvolvimento inicial: a biblioteca de componentes compartilhados está sendo
-construída primeiro, para servir de base a todas as telas. A aplicação hoje roda com
-dados mockados — a integração com a API real do backend é uma etapa posterior.
+Completo e em produção, rodando contra a API real do backend (não mais dados
+mockados): cadastro e login com sessão real, cadastro de repositório manual ou
+conectando ao GitHub (com listagem dos repositórios reais do usuário), configuração de
+credenciais, wizard guiado de onboarding — incluindo instalação automática da
+[GitHub Action](https://github.com/Natan-Lucena/bella-review-action) por Pull Request,
+sem precisar colar YAML manualmente —, e acompanhamento de execuções, comentários e
+consumo de tokens.
+
+Deploy em [bella-review-web.vercel.app](https://bella-review-web.vercel.app).
