@@ -9,6 +9,7 @@ import { useRepoDashboard } from "../../data/dashboard";
 import { cn } from "../../lib/cn";
 import { formatCurrency, formatNumber } from "../../lib/format-number";
 import type { DashboardPeriod } from "../../types/dashboard";
+import { AcceptanceMetricsSection } from "./AcceptanceMetricsSection";
 import { PeriodSelector } from "./PeriodSelector";
 
 const REASONING_TOOLTIP =
@@ -112,6 +113,8 @@ export function DashboardPage() {
           {NO_USAGE_TEXT}
         </div>
       )}
+
+      <AcceptanceMetricsSection repoId={repoId} period={period} />
     </div>
   );
 }

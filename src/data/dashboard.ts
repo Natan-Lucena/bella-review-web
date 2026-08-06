@@ -13,3 +13,11 @@ export function useRepoDashboard(repoId: string, period: DashboardPeriod) {
     staleTime: STALE_TIME_MS,
   });
 }
+
+export function useAcceptanceMetrics(repoId: string, period: DashboardPeriod) {
+  return useQuery({
+    queryKey: queryKeys.repoAcceptanceMetrics(repoId, period),
+    queryFn: () => apiClient.getAcceptanceMetrics(repoId, period),
+    staleTime: STALE_TIME_MS,
+  });
+}

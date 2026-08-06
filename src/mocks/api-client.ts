@@ -1,7 +1,12 @@
+import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { Comment, CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod, DashboardUsage } from "../types/dashboard";
-import type { GithubRepoOption, InstallActionResult, ListGithubReposResponse } from "../types/github";
+import type {
+  GithubRepoOption,
+  InstallActionResult,
+  ListGithubReposResponse,
+} from "../types/github";
 import type { ListReposResponse, Repo, ServiceState } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -53,6 +58,17 @@ function emptyUsage(): DashboardUsage {
     reasoningTokens: 0,
     estimatedCost: null,
     percentageChangeFromPreviousPeriod: null,
+  };
+}
+
+function emptyAcceptanceMetrics(): AcceptanceMetrics {
+  return {
+    applyRate: { value: null, decidedCount: 0, appliedCount: 0 },
+    applyRateByCategory: [],
+    applyRateBySeverity: [],
+    coverage: { actionableCount: 0, observationCount: 0, actionableShare: null },
+    costPerAppliedSuggestion: null,
+    previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
   };
 }
 
@@ -204,6 +220,11 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
       enabledCategories: [],
     },
     dashboardUsageByPeriod: { "7d": emptyUsage(), "30d": emptyUsage(), "90d": emptyUsage() },
+    acceptanceMetricsByPeriod: {
+      "7d": emptyAcceptanceMetrics(),
+      "30d": emptyAcceptanceMetrics(),
+      "90d": emptyAcceptanceMetrics(),
+    },
     reviewRuns: [],
     comments: [],
   };
@@ -330,6 +351,14 @@ export async function getDashboard(repoId: string, period: DashboardPeriod): Pro
     activeModel: repo.llmCredential ? repo.config.model : "",
     serviceState: toServiceState(repo),
   };
+}
+
+export async function getAcceptanceMetrics(
+  repoId: string,
+  period: DashboardPeriod,
+): Promise<AcceptanceMetrics> {
+  await delay(350);
+  return findRepoOrThrow(repoId).acceptanceMetricsByPeriod[period];
 }
 
 export async function listReviewRuns(

@@ -5,6 +5,7 @@ import {
   createRepo,
   generateActionToken,
   generateWebhookSecret,
+  getAcceptanceMetrics,
   getDashboard,
   getReviewRunDetail,
   listComments,
@@ -154,6 +155,44 @@ describe("getDashboard", () => {
 
   it("rejects with repo_not_found for an unknown repo id", async () => {
     await expect(getDashboard("repo-does-not-exist", "30d")).rejects.toMatchObject({
+      code: "repo_not_found",
+    });
+  });
+});
+
+describe("getAcceptanceMetrics", () => {
+  it("returns real numbers for a mature repo, including a null row inside an otherwise-populated table", async () => {
+    const metrics = await getAcceptanceMetrics("repo-bella-api", "30d");
+    expect(metrics.applyRate).toEqual({ value: 75, decidedCount: 20, appliedCount: 15 });
+    expect(metrics.applyRateBySeverity).toContainEqual({
+      severity: "critical",
+      value: null,
+      decidedCount: 0,
+    });
+    expect(metrics.costPerAppliedSuggestion).not.toBeNull();
+  });
+
+  it("reports applyRate.value null (not 0) when there are suggestions but nothing decided yet", async () => {
+    const metrics = await getAcceptanceMetrics("repo-bella-web", "30d");
+    expect(metrics.applyRate.value).toBeNull();
+    expect(metrics.coverage.actionableCount + metrics.coverage.observationCount).toBeGreaterThan(0);
+  });
+
+  it("reports every field null/empty/zero for a repo with no comments at all", async () => {
+    const metrics = await getAcceptanceMetrics("repo-bella-action", "30d");
+    expect(metrics.applyRate).toEqual({ value: null, decidedCount: 0, appliedCount: 0 });
+    expect(metrics.applyRateByCategory).toEqual([]);
+    expect(metrics.applyRateBySeverity).toEqual([]);
+    expect(metrics.coverage).toEqual({
+      actionableCount: 0,
+      observationCount: 0,
+      actionableShare: null,
+    });
+    expect(metrics.costPerAppliedSuggestion).toBeNull();
+  });
+
+  it("rejects with repo_not_found for an unknown repo id", async () => {
+    await expect(getAcceptanceMetrics("repo-does-not-exist", "30d")).rejects.toMatchObject({
       code: "repo_not_found",
     });
   });

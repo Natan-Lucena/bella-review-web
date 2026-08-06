@@ -10,3 +10,10 @@ export function formatNumber(value: number): string {
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
+
+// Uma casa decimal, sem zeros à direita desnecessários — usado pelas métricas
+// de aceitação do Painel (PRD 12). Quem chama decide a cópia para o caso null
+// (o valor em si nunca é formatado como "0%" quando não há dado, ver KpiCard).
+export function formatPercent(value: number): string {
+  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value)}%`;
+}
