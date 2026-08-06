@@ -86,4 +86,15 @@ describe("DashboardPage", () => {
     expect(await screen.findByText("1.340.000")).toBeInTheDocument();
     expect(screen.queryByText("512.000")).not.toBeInTheDocument();
   });
+
+  it("renders the acceptance-metrics section, and updates it too when the period changes", async () => {
+    renderDashboard("repo-bella-api");
+    const user = userEvent.setup();
+    expect(await screen.findByText("Sugestões e aceitação")).toBeInTheDocument();
+    expect(await screen.findByText("75%")).toBeInTheDocument(); // 30d applyRate
+
+    await user.click(screen.getByRole("button", { name: "7 dias" }));
+    expect(await screen.findByText("66,7%")).toBeInTheDocument(); // 7d applyRate
+    expect(screen.queryByText("75%")).not.toBeInTheDocument();
+  });
 });

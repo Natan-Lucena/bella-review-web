@@ -1,3 +1,4 @@
+import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod } from "../types/dashboard";
@@ -75,6 +76,13 @@ export function updateRepoConfig(repoId: string, patch: RepoConfigPatch): Promis
 
 export function getDashboard(repoId: string, period: DashboardPeriod): Promise<Dashboard> {
   return request(`/repos/${repoId}/dashboard`, { query: { period } });
+}
+
+export function getAcceptanceMetrics(
+  repoId: string,
+  period: DashboardPeriod,
+): Promise<AcceptanceMetrics> {
+  return request(`/repos/${repoId}/acceptance-metrics`, { query: { period } });
 }
 
 export function listReviewRuns(

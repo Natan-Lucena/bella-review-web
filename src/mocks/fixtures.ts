@@ -1,3 +1,4 @@
+import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { Comment, CommentSeverity, CommentStatus } from "../types/comment";
 import type { Credential } from "../types/credential";
 import type { DashboardPeriod, DashboardUsage } from "../types/dashboard";
@@ -43,6 +44,10 @@ export type RepoRecord = {
   webhookSecretGeneratedAt: string | null;
   config: RepoConfig;
   dashboardUsageByPeriod: Record<DashboardPeriod, DashboardUsage>;
+  // Pré-calculado à mão, não derivado de `comments` — o `Comment` mock não tem
+  // `kind`/`applyStatus` (fora do escopo da PRD 12, ver
+  // frontend-prds/12-metricas-de-aceitacao-no-painel.md, "Fixtures").
+  acceptanceMetricsByPeriod: Record<DashboardPeriod, AcceptanceMetrics>;
   reviewRuns: ReviewRunRecord[];
   comments: Comment[];
 };
@@ -64,6 +69,27 @@ function isoOffset(daysAgo: number, hoursAgo = 0): string {
 function commitSha(seed: number): string {
   const scrambled = ((seed * 2654435761) >>> 0).toString(16).padStart(8, "0");
   return scrambled.repeat(5).slice(0, 40);
+}
+
+// Nenhuma sugestão gerada no período — usado por bella-action (repositório
+// vazio/inativo) nos três períodos. Ver PRD 12, "Fixtures" (caso "sem dado").
+// bella-web (que tem sugestão, só ainda não decidida) monta seu próprio
+// objeto abaixo — array vazio aqui é "sem comentário nenhum", diferente de
+// "tem comentário, nada decidido ainda".
+function noDecisionsYet(actionableCount: number, observationCount: number): AcceptanceMetrics {
+  const total = actionableCount + observationCount;
+  return {
+    applyRate: { value: null, decidedCount: 0, appliedCount: 0 },
+    applyRateByCategory: [],
+    applyRateBySeverity: [],
+    coverage: {
+      actionableCount,
+      observationCount,
+      actionableShare: total === 0 ? null : (actionableCount / total) * 100,
+    },
+    costPerAppliedSuggestion: null,
+    previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
+  };
 }
 
 function agentTurn(
@@ -184,6 +210,65 @@ const bellaApiComments: Comment[] = Array.from({ length: 24 }, (_, i) => {
   } satisfies Comment;
 });
 
+// Repositório maduro — números reais, com uma linha de severidade
+// (`critical`) sem nenhuma decisão ainda (`value: null` dentro de uma tabela
+// que já tem outras linhas com dado), e uma tendência real entre
+// `previousPeriod` e o período atual. Ver PRD 12, "Fixtures".
+const bellaApiAcceptanceMetrics: Record<DashboardPeriod, AcceptanceMetrics> = {
+  "7d": {
+    // decidedCount/appliedCount deliberately produce a value (66,7%) that
+    // doesn't collide with any breakdown row below — see AcceptanceMetricsSection.test.tsx.
+    applyRate: { value: 66.66666666666667, decidedCount: 3, appliedCount: 2 },
+    applyRateByCategory: [
+      { category: "security", value: 100, decidedCount: 2 },
+      { category: "performance", value: 0, decidedCount: 1 },
+    ],
+    applyRateBySeverity: [
+      { severity: "critical", value: null, decidedCount: 0 },
+      { severity: "high", value: 50, decidedCount: 2 },
+      { severity: "medium", value: 100, decidedCount: 1 },
+      { severity: "low", value: null, decidedCount: 0 },
+    ],
+    coverage: { actionableCount: 5, observationCount: 3, actionableShare: 62.5 },
+    costPerAppliedSuggestion: 3.9,
+    previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
+  },
+  "30d": {
+    applyRate: { value: 75, decidedCount: 20, appliedCount: 15 },
+    applyRateByCategory: [
+      { category: "security", value: 80, decidedCount: 10 },
+      { category: "performance", value: 60, decidedCount: 5 },
+      { category: "correctness", value: 80, decidedCount: 5 },
+    ],
+    applyRateBySeverity: [
+      { severity: "critical", value: null, decidedCount: 0 },
+      { severity: "high", value: 87.5, decidedCount: 8 },
+      { severity: "medium", value: 50, decidedCount: 8 },
+      { severity: "low", value: 100, decidedCount: 4 },
+    ],
+    coverage: { actionableCount: 26, observationCount: 14, actionableShare: 65 },
+    costPerAppliedSuggestion: 3.8,
+    previousPeriod: { applyRate: { value: 62 }, costPerAppliedSuggestion: 4.5 },
+  },
+  "90d": {
+    applyRate: { value: 75, decidedCount: 40, appliedCount: 30 },
+    applyRateByCategory: [
+      { category: "security", value: 80, decidedCount: 20 },
+      { category: "performance", value: 60, decidedCount: 10 },
+      { category: "correctness", value: 80, decidedCount: 10 },
+    ],
+    applyRateBySeverity: [
+      { severity: "critical", value: null, decidedCount: 0 },
+      { severity: "high", value: 87.5, decidedCount: 16 },
+      { severity: "medium", value: 50, decidedCount: 16 },
+      { severity: "low", value: 100, decidedCount: 8 },
+    ],
+    coverage: { actionableCount: 52, observationCount: 28, actionableShare: 65 },
+    costPerAppliedSuggestion: 4.1,
+    previousPeriod: { applyRate: { value: 70 }, costPerAppliedSuggestion: 4.6 },
+  },
+};
+
 const bellaApi: RepoRecord = {
   id: "repo-bella-api",
   fullName: "Natan-Lucena/bella-reviewer-api",
@@ -235,6 +320,7 @@ const bellaApi: RepoRecord = {
       percentageChangeFromPreviousPeriod: 8.9,
     },
   },
+  acceptanceMetricsByPeriod: bellaApiAcceptanceMetrics,
   reviewRuns: [...bellaApiCompletedRuns, ...bellaApiOtherRuns],
   comments: bellaApiComments,
 };
@@ -254,6 +340,15 @@ const bellaWebCompletedRun: ReviewRunRecord = {
   startedAt: isoOffset(2, 1),
   completedAt: isoOffset(2, 0),
   turns: [agentTurn(15438, 14, 1901)],
+};
+
+const bellaWebAcceptanceMetrics: AcceptanceMetrics = {
+  applyRate: { value: null, decidedCount: 0, appliedCount: 0 },
+  applyRateByCategory: [{ category: "correctness", value: null, decidedCount: 0 }],
+  applyRateBySeverity: [{ severity: "high", value: null, decidedCount: 0 }],
+  coverage: { actionableCount: 1, observationCount: 1, actionableShare: 50 },
+  costPerAppliedSuggestion: null,
+  previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
 };
 
 const bellaWeb: RepoRecord = {
@@ -306,6 +401,14 @@ const bellaWeb: RepoRecord = {
       estimatedCost: null,
       percentageChangeFromPreviousPeriod: null,
     },
+  },
+  // Tem sugestão (o comentário 1 abaixo é acionável em espírito), mas ainda
+  // nada foi decidido — value: null nas linhas, não array vazio, distinto do
+  // "sem comentário nenhum" de bella-action logo abaixo.
+  acceptanceMetricsByPeriod: {
+    "7d": bellaWebAcceptanceMetrics,
+    "30d": bellaWebAcceptanceMetrics,
+    "90d": bellaWebAcceptanceMetrics,
   },
   reviewRuns: [
     bellaWebCompletedRun,
@@ -405,6 +508,11 @@ const bellaAction: RepoRecord = {
       estimatedCost: null,
       percentageChangeFromPreviousPeriod: null,
     },
+  },
+  acceptanceMetricsByPeriod: {
+    "7d": noDecisionsYet(0, 0),
+    "30d": noDecisionsYet(0, 0),
+    "90d": noDecisionsYet(0, 0),
   },
   reviewRuns: [],
   comments: [],
