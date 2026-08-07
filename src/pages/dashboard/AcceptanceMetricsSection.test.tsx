@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { resetMockData } from "../../mocks/api-client";
@@ -30,6 +31,19 @@ describe("AcceptanceMetricsSection", () => {
     expect(screen.getByText("65%")).toBeInTheDocument(); // coverage.actionableShare
     expect(screen.getByText("R$ 3,80")).toBeInTheDocument(); // costPerAppliedSuggestion
     expect(screen.getByText("Período anterior: 62%")).toBeInTheDocument();
+  });
+
+  it("explains, via tooltip, that the cost is a paid-tier projection, not necessarily real spend", async () => {
+    renderSection("repo-bella-api");
+    const user = userEvent.setup();
+    await screen.findByText("R$ 3,80");
+
+    await user.hover(
+      screen.getByRole("button", { name: "Mais informações sobre Custo por sugestão aplicada" }),
+    );
+    expect(
+      screen.getByText(/Uma chave no tier gratuito do Google AI Studio tem custo real zero\./),
+    ).toBeInTheDocument();
   });
 
   it("shows '—' with the explanatory hint when applyRate/cost are null, never 0%/R$ 0,00", async () => {

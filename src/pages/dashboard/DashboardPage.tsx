@@ -7,6 +7,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 import { useRepoDashboard } from "../../data/dashboard";
 import { cn } from "../../lib/cn";
+import { ESTIMATED_COST_TOOLTIP } from "../../lib/cost-copy";
 import { formatCurrency, formatNumber } from "../../lib/format-number";
 import type { DashboardPeriod } from "../../types/dashboard";
 import { AcceptanceMetricsSection } from "./AcceptanceMetricsSection";
@@ -14,7 +15,7 @@ import { PeriodSelector } from "./PeriodSelector";
 
 const REASONING_TOOLTIP =
   'Tokens gastos pelo modelo "pensando" antes de responder — cobrados à parte em modelos com essa capacidade.';
-const COST_UNAVAILABLE_HINT = "O cálculo de custo por modelo ainda não existe no backend.";
+const COST_UNAVAILABLE_HINT = "Não foi possível calcular o custo para o modelo configurado.";
 const NO_USAGE_TEXT =
   "Nenhuma execução registrada neste período ainda. Depois que a Action rodar em um Pull Request, os dados aparecem aqui.";
 
@@ -94,6 +95,7 @@ export function DashboardPage() {
           label="Custo estimado"
           value={costValue === null ? "—" : formatCurrency(costValue)}
           unavailable={costValue === null}
+          tooltip={ESTIMATED_COST_TOOLTIP}
           hint={costValue === null ? COST_UNAVAILABLE_HINT : undefined}
         />
       </div>

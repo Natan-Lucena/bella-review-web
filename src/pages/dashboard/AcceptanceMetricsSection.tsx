@@ -5,6 +5,7 @@ import { DataTable } from "../../components/DataTable";
 import { KpiCard } from "../../components/KpiCard";
 import { Skeleton } from "../../components/Skeleton";
 import { useAcceptanceMetrics } from "../../data/dashboard";
+import { ESTIMATED_COST_TOOLTIP } from "../../lib/cost-copy";
 import { formatCurrency, formatPercent } from "../../lib/format-number";
 import { severityBadgeProps } from "../../lib/status-badges";
 import type { AcceptanceMetrics } from "../../types/acceptance-metrics";
@@ -114,6 +115,7 @@ export function AcceptanceMetricsSection({ repoId, period }: AcceptanceMetricsSe
           label="Custo por sugestão aplicada"
           value={costPerAppliedSuggestion === null ? "—" : formatCurrency(costPerAppliedSuggestion)}
           unavailable={costPerAppliedSuggestion === null}
+          tooltip={ESTIMATED_COST_TOOLTIP}
           hint={costPerAppliedSuggestion === null ? COST_UNAVAILABLE_HINT : undefined}
         />
       </div>
