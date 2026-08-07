@@ -42,9 +42,20 @@ describe("DashboardPage", () => {
     expect(screen.getByText("Custo estimado")).toBeInTheDocument();
     expect(screen.getByText("—")).toBeInTheDocument();
     expect(
-      screen.getByText("O cálculo de custo por modelo ainda não existe no backend."),
+      screen.getByText("Não foi possível calcular o custo para o modelo configurado."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+  });
+
+  it("explains, via tooltip, that the estimated cost is a paid-tier projection, not necessarily real spend", async () => {
+    renderDashboard("repo-bella-api");
+    const user = userEvent.setup();
+    await screen.findByText("Custo estimado");
+
+    await user.hover(screen.getByRole("button", { name: "Mais informações sobre Custo estimado" }));
+    expect(
+      screen.getByText(/Uma chave no tier gratuito do Google AI Studio tem custo real zero\./),
+    ).toBeInTheDocument();
   });
 
   it("shows 'sem dado do período anterior' instead of '↑ 0%' when there is no previous-period comparison", async () => {
