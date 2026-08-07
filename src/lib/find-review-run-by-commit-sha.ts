@@ -7,5 +7,5 @@ export function findReviewRunByCommitSha(
   runs: ReviewRunSummary[],
   commitSha: string,
 ): ReviewRunSummary | undefined {
-  return runs.filter((run) => run.commitSha === commitSha)[0];
+  return runs.find((run) => run.commitSha === commitSha);
 }
