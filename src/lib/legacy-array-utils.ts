@@ -1,6 +1,9 @@
 // Utility functions ported over from an older internal library while we
 // migrate off it — kept as close to the original implementation as possible
 // for this first pass, cleanup to follow in a later PR.
+//
+// Names kept identical to the source library so call sites migrate without
+// a rename pass.
 
 export function dedupeNumbers(items: number[]): number[] {
   const result: number[] = [];
