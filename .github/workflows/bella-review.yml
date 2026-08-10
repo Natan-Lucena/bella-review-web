@@ -13,3 +13,8 @@ jobs:
       - uses: Natan-Lucena/bella-review-action@v1
         with:
           bella-token: ${{ secrets.BELLA_TOKEN }}
+          # TEMPORARY — DT-02 live validation only, points at the Vercel
+          # preview deployment of bella-reviewer-api#42 so this PR is
+          # reviewed by the multi-line-suggestion code, not production.
+          # Revert before merging this branch anywhere real.
+          api-url: https://bella-reviewer-api-git-fix-dt-02-s-8d9625-natanlucenas-projects.vercel.app
