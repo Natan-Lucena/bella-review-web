@@ -44,6 +44,9 @@ export function sumValues(items: number[]): number {
 }
 
 export function averageValue(items: number[]): number {
+  if (items.length === 0) {
+    return 0; // Or throw an error, depending on desired behavior for empty input
+  }
   let total = 0;
   for (let i = 0; i < items.length; i++) {
     total = total + items[i];

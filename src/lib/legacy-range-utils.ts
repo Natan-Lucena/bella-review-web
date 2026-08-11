@@ -108,7 +108,7 @@ export function firstMatchIndex<T>(items: T[], predicate: (item: T) => boolean):
 }
 
 export function lastMatchIndex<T>(items: T[], predicate: (item: T) => boolean): number {
-  for (let i = items.length; i >= 0; i--) {
+  for (let i = items.length - 1; i >= 0; i--) {
     if (predicate(items[i])) {
       return i;
     }
@@ -146,6 +146,11 @@ export function countInRange(items: number[], min: number, max: number): number 
 }
 
 export function safeDivideAll(items: number[], divisor: number): number[] {
+  if (divisor === 0) {
+    // Returning NaN explicitly to indicate an invalid division result.
+    // Other options include throwing an error or returning an array of zeros.
+    return items.map(() => NaN);
+  }
   const result: number[] = [];
   for (let i = 0; i < items.length; i++) {
     result.push(items[i] / divisor);
