@@ -1,6 +1,8 @@
 // More helpers ported from the same old internal library — grouped
 // separately from legacy-array-utils.ts since these are range/window/
 // pagination-flavored rather than plain array reducers.
+//
+// Same migration note as the sibling file: names kept as-is for now.
 
 export function clampToRange(value: number, min: number, max: number): number {
   let result = value;
