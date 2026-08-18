@@ -9,6 +9,7 @@ import { useRepoDashboard } from "../../data/dashboard";
 import { cn } from "../../lib/cn";
 import { ESTIMATED_COST_TOOLTIP } from "../../lib/cost-copy";
 import { formatCurrency, formatNumber } from "../../lib/format-number";
+import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import type { DashboardPeriod } from "../../types/dashboard";
 import { AcceptanceMetricsSection } from "./AcceptanceMetricsSection";
 import { PeriodSelector } from "./PeriodSelector";
@@ -45,7 +46,7 @@ export function DashboardPage() {
   const { data: dashboard, isPending } = useRepoDashboard(repoId, period);
 
   const modelLine = dashboard?.activeModel
-    ? `${dashboard.activeLlmProvider} · ${dashboard.activeModel}`
+    ? `${LLM_PROVIDER_CATALOG[dashboard.activeLlmProvider].name} · ${dashboard.activeModel}`
     : "Ainda não configurada";
 
   const header = (

@@ -7,6 +7,7 @@ import type {
   InstallActionResult,
   ListGithubReposResponse,
 } from "../types/github";
+import type { LlmProvider } from "../types/llm-provider";
 import type { ListReposResponse, Repo, ServiceState } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -18,6 +19,7 @@ import type {
 } from "../types/review-run";
 import type { LoginResponse, SignupResponse, User } from "../types/user";
 import { ApiError } from "../lib/api-error";
+import { getDefaultModelForProvider } from "../lib/llm-provider-catalog";
 import { seedRepos, seedUsers } from "./fixtures";
 import type { RepoRecord, ReviewRunRecord, SeedUser } from "./fixtures";
 
@@ -100,7 +102,10 @@ function toRepo(record: RepoRecord): Repo {
     fullName: record.fullName,
     active: record.active,
     configComplete,
-    llmProvider: record.llmCredential?.provider ?? "",
+    // Vem de RepoConfig, não de Credential — igual ao backend real
+    // (RepoConfig.llmProvider sempre existe, com default "gemini", desde a
+    // criação do repo, independente de já haver credencial salva ou não).
+    llmProvider: record.config.llmProvider,
     model: record.llmCredential ? record.config.model : "",
   };
 }
@@ -214,6 +219,7 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
     actionTokenGeneratedAt: null,
     webhookSecretGeneratedAt: null,
     config: {
+      llmProvider: "gemini",
       model: "gemini-2.5-flash",
       tokenLimit: 100000,
       temperature: 0.2,
@@ -232,21 +238,29 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
   return toRepo(record);
 }
 
-export async function setLlmCredential(repoId: string, apiKey: string): Promise<Credential> {
+export async function setLlmCredential(
+  repoId: string,
+  params: { provider: LlmProvider; apiKey: string },
+): Promise<Credential> {
   await delay(500);
   const repo = findRepoOrThrow(repoId);
-  if (!apiKey) {
+  if (!params.apiKey) {
     throw new ApiError("validation_error", "apiKey is required");
   }
   const now = new Date().toISOString();
   const credential: Credential = {
     type: "llm",
-    provider: "Gemini",
+    provider: params.provider,
     configured: true,
     lastValidatedAt: now,
     updatedAt: now,
   };
   repo.llmCredential = credential;
+  // Mesmo comportamento do SetLlmCredentialUseCase real
+  // (backend-prds/25-...md): configurar a credencial LLM é o que muda o
+  // provedor ativo, e o modelo cai pro default do catálogo do provedor novo.
+  repo.config.llmProvider = params.provider;
+  repo.config.model = getDefaultModelForProvider(params.provider);
   return credential;
 }
 
@@ -347,7 +361,9 @@ export async function getDashboard(repoId: string, period: DashboardPeriod): Pro
   return {
     period,
     usage: repo.dashboardUsageByPeriod[period],
-    activeLlmProvider: repo.llmCredential?.provider ?? "",
+    // Vem de RepoConfig, não de Credential — mesmo racional de toRepo()
+    // acima (RepoConfig.llmProvider sempre existe, com default "gemini").
+    activeLlmProvider: repo.config.llmProvider,
     activeModel: repo.llmCredential ? repo.config.model : "",
     serviceState: toServiceState(repo),
   };

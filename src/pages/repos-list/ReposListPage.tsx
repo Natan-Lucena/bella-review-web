@@ -7,6 +7,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 import { useRepos } from "../../data/repos";
+import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import { repoConfigBadgeProps } from "../../lib/status-badges";
 
 // Tela 4 — Meus Repositórios (frontend-especificacao-telas.md). Hub central
@@ -83,7 +84,9 @@ export function ReposListPage() {
                   <div>
                     <p className="font-mono text-[16.5px] font-medium text-ink">{repo.fullName}</p>
                     <p className="mt-1.5 text-[13.5px] text-ink-muted">
-                      {repo.model ? `${repo.llmProvider} · ${repo.model}` : "Ainda não configurado"}
+                      {repo.model
+                        ? `${LLM_PROVIDER_CATALOG[repo.llmProvider].name} · ${repo.model}`
+                        : "Ainda não configurado"}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

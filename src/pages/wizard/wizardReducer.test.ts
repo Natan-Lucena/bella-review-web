@@ -59,6 +59,12 @@ describe("wizardReducer", () => {
     expect(state.fullName).toBe("org/repo");
   });
 
+  it("defaults the provider to gemini and lets it be changed", () => {
+    expect(initialWizardState.provider).toBe("gemini");
+    const state = wizardReducer(initialWizardState, { type: "SET_PROVIDER", provider: "claude" });
+    expect(state.provider).toBe("claude");
+  });
+
   it("stores the repoId once the repo is created", () => {
     const state = wizardReducer(initialWizardState, { type: "SET_REPO_ID", repoId: "repo-9" });
     expect(state.repoId).toBe("repo-9");

@@ -59,7 +59,7 @@ describe("SettingsPage", () => {
     const user = userEvent.setup();
 
     await user.click(screen.getByRole("button", { name: /Credencial do LLM · Gemini/ }));
-    const input = screen.getByLabelText("Chave da API");
+    const input = screen.getByLabelText("Chave da API do Gemini");
     await user.type(input, "nova-chave-123");
     await user.click(screen.getByRole("button", { name: "Salvar chave" }));
 
@@ -103,7 +103,9 @@ describe("SettingsPage", () => {
     await user.click(generateButton);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
-      screen.getByText("Se já existir um token gerado, esta ação invalida o anterior imediatamente."),
+      screen.getByText(
+        "Se já existir um token gerado, esta ação invalida o anterior imediatamente.",
+      ),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Confirmar rotação" }));

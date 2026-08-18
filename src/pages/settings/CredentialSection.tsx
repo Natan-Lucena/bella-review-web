@@ -3,6 +3,10 @@ import { useState } from "react";
 import { Accordion } from "../../components/Accordion";
 import { Button } from "../../components/Button";
 import { PasswordField } from "../../components/PasswordField";
+import { ProviderLogo } from "../../components/ProviderLogo";
+import { SelectableCard } from "../../components/SelectableCard";
+import { LLM_PROVIDERS } from "../../lib/llm-provider-catalog";
+import type { LlmProvider } from "../../types/llm-provider";
 
 type CredentialSectionProps = {
   title: string;
@@ -16,6 +20,12 @@ type CredentialSectionProps = {
   // Link pra onde gerar o valor deste campo (ex.: a página de criação de
   // PAT do GitHub) — nem toda credencial tem um destino óbvio pra isso.
   helpLink?: { label: string; href: string };
+  // Só o bloco de credencial LLM passa isso — o de SCM continua idêntico,
+  // sem seletor (só existe um provedor de SCM). Ver 17-...md.
+  providerPicker?: {
+    currentProvider: LlmProvider;
+    onProviderChange: (provider: LlmProvider) => void;
+  };
 };
 
 // Blocos 6.1/6.2 (Credencial LLM/SCM) — composição idêntica, só muda rótulo,
@@ -35,6 +45,7 @@ export function CredentialSection({
   isPending,
   onSave,
   helpLink,
+  providerPicker,
 }: CredentialSectionProps) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -55,8 +66,23 @@ export function CredentialSection({
   }
 
   return (
-    <Accordion title={<div className="text-[17px] font-medium tracking-tight text-ink">{title}</div>}>
+    <Accordion
+      title={<div className="text-[17px] font-medium tracking-tight text-ink">{title}</div>}
+    >
       <div className="flex flex-col gap-4">
+        {providerPicker && (
+          <div role="radiogroup" aria-label="Provedor de LLM" className="flex flex-col gap-3">
+            {LLM_PROVIDERS.map((option) => (
+              <SelectableCard
+                key={option.provider}
+                selected={providerPicker.currentProvider === option.provider}
+                onSelect={() => providerPicker.onProviderChange(option.provider)}
+                title={option.name}
+                icon={<ProviderLogo provider={option.provider} />}
+              />
+            ))}
+          </div>
+        )}
         <PasswordField
           label={fieldLabel}
           htmlFor={`${htmlForPrefix}-value`}

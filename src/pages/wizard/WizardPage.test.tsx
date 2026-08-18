@@ -43,8 +43,8 @@ async function completeStep1(user: ReturnType<typeof userEvent.setup>, fullName:
 }
 
 async function completeStep3(user: ReturnType<typeof userEvent.setup>) {
-  await screen.findByRole("heading", { name: "Sua chave do Gemini" });
-  await user.type(screen.getByLabelText("Chave da API"), "gemini-key-123");
+  await screen.findByRole("heading", { name: "Escolha o provedor de LLM" });
+  await user.type(screen.getByLabelText("Chave da API do Gemini"), "gemini-key-123");
   await user.click(screen.getByRole("button", { name: "Continuar" }));
   await screen.findByRole("heading", { name: "Seu Personal Access Token do GitHub" });
 }
@@ -224,8 +224,8 @@ describe("WizardPage", () => {
 
     await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    await screen.findByRole("heading", { name: "Sua chave do Gemini" });
-    await user.type(screen.getByLabelText("Chave da API"), "gemini-key-123");
+    await screen.findByRole("heading", { name: "Escolha o provedor de LLM" });
+    await user.type(screen.getByLabelText("Chave da API do Gemini"), "gemini-key-123");
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 
     await screen.findByRole("heading", { name: "Seu Personal Access Token do GitHub" });
@@ -378,10 +378,10 @@ describe("WizardPage", () => {
     const user = userEvent.setup();
     await completeStep1(user, "org/repo-required-fields");
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    await screen.findByRole("heading", { name: "Sua chave do Gemini" });
+    await screen.findByRole("heading", { name: "Escolha o provedor de LLM" });
 
     expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled();
-    await user.type(screen.getByLabelText("Chave da API"), "gemini-key");
+    await user.type(screen.getByLabelText("Chave da API do Gemini"), "gemini-key");
     expect(screen.getByRole("button", { name: "Continuar" })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 

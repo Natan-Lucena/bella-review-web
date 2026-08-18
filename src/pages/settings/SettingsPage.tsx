@@ -12,6 +12,8 @@ import {
   useUpdateRepoConfig,
 } from "../../data/repos";
 import { GITHUB_TOKEN_URL } from "../../lib/github-url";
+import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
+import type { LlmProvider } from "../../types/llm-provider";
 import { CredentialSection } from "./CredentialSection";
 import { ReviewParamsSection } from "./ReviewParamsSection";
 import { SecretCard } from "./SecretCard";
@@ -36,6 +38,9 @@ export function SettingsPage() {
   // vem do cache populado pelo RepoAreaLayout (mesma query ["repos"]), não é
   // uma chamada nova.
   const { data: repo } = useRepo(repoId);
+  const currentProvider: LlmProvider = repo?.llmProvider ?? "gemini";
+  const [selectedProvider, setSelectedProvider] = useState<LlmProvider>(currentProvider);
+  const selectedProviderEntry = LLM_PROVIDER_CATALOG[selectedProvider];
   const setLlmCredential = useSetLlmCredential(repoId);
   const setScmCredential = useSetScmCredential(repoId);
   const generateActionToken = useGenerateActionToken(repoId);
@@ -58,14 +63,18 @@ export function SettingsPage() {
       <PageHeader level="h2" title="Configurações" />
 
       <CredentialSection
-        title="Credencial do LLM · Gemini"
-        fieldLabel="Chave da API"
+        title={`Credencial do LLM · ${selectedProviderEntry.name}`}
+        fieldLabel={selectedProviderEntry.apiKeyLabel}
         htmlForPrefix="settings-llm"
-        placeholder="cole sua chave de API do Gemini"
+        placeholder={selectedProviderEntry.apiKeyPlaceholder}
         hint="A chave nunca é devolvida pela API depois de salva — e, sem endpoint de leitura, nem esta tela sabe se já existe uma configurada. Salvar aqui sempre substitui a atual, se houver."
         saveLabel="Salvar chave"
         isPending={setLlmCredential.isPending}
-        onSave={(apiKey) => setLlmCredential.mutateAsync(apiKey)}
+        onSave={(apiKey) => setLlmCredential.mutateAsync({ provider: selectedProvider, apiKey })}
+        providerPicker={{
+          currentProvider: selectedProvider,
+          onProviderChange: setSelectedProvider,
+        }}
       />
 
       <CredentialSection
@@ -105,6 +114,7 @@ export function SettingsPage() {
       <ReviewParamsSection
         isPending={updateRepoConfig.isPending}
         onSave={(patch) => updateRepoConfig.mutateAsync(patch)}
+        currentProvider={currentProvider}
       />
 
       {modal && (

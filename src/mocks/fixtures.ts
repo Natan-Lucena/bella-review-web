@@ -275,7 +275,7 @@ const bellaApi: RepoRecord = {
   active: true,
   llmCredential: {
     type: "llm",
-    provider: "Gemini",
+    provider: "gemini",
     configured: true,
     lastValidatedAt: isoOffset(60, 0),
     updatedAt: isoOffset(60, 0),
@@ -292,6 +292,7 @@ const bellaApi: RepoRecord = {
   actionTokenGeneratedAt: isoOffset(60, 0),
   webhookSecretGeneratedAt: isoOffset(60, 0),
   config: {
+    llmProvider: "gemini",
     model: "gemini-2.5-flash",
     tokenLimit: 100000,
     temperature: 0.2,
@@ -357,7 +358,7 @@ const bellaWeb: RepoRecord = {
   active: true,
   llmCredential: {
     type: "llm",
-    provider: "Gemini",
+    provider: "gemini",
     configured: true,
     lastValidatedAt: isoOffset(10, 0),
     updatedAt: isoOffset(10, 0),
@@ -374,6 +375,7 @@ const bellaWeb: RepoRecord = {
   actionTokenGeneratedAt: isoOffset(10, 0),
   webhookSecretGeneratedAt: null,
   config: {
+    llmProvider: "gemini",
     model: "gemini-2.5-flash",
     tokenLimit: 100000,
     temperature: 0.2,
@@ -481,6 +483,7 @@ const bellaAction: RepoRecord = {
   actionTokenGeneratedAt: null,
   webhookSecretGeneratedAt: null,
   config: {
+    llmProvider: "gemini",
     model: "gemini-2.5-flash",
     tokenLimit: 100000,
     temperature: 0.2,

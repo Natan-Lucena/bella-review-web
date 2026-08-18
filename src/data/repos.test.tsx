@@ -69,11 +69,11 @@ describe("credential and token mutations", () => {
     const { result: llmResult } = renderHook(() => useSetLlmCredential("repo-bella-action"), {
       wrapper,
     });
-    llmResult.current.mutate("gemini-key");
+    llmResult.current.mutate({ provider: "gemini", apiKey: "gemini-key" });
     await waitFor(() => expect(llmResult.current.isSuccess).toBe(true));
     expect(llmResult.current.data).toMatchObject({
       type: "llm",
-      provider: "Gemini",
+      provider: "gemini",
       configured: true,
     });
 
@@ -116,14 +116,14 @@ describe("credential and token mutations", () => {
     const { result: llmResult } = renderHook(() => useSetLlmCredential("repo-bella-action"), {
       wrapper,
     });
-    llmResult.current.mutate("gemini-key");
+    llmResult.current.mutate({ provider: "gemini", apiKey: "gemini-key" });
     await waitFor(() => expect(llmResult.current.isSuccess).toBe(true));
 
     await waitFor(() =>
       expect(
         reposResult.current.data?.repos.find((repo) => repo.id === "repo-bella-action"),
       ).toMatchObject({
-        llmProvider: "Gemini",
+        llmProvider: "gemini",
       }),
     );
   });

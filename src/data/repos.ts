@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { LlmProvider } from "../types/llm-provider";
 import type { RepoConfigPatch } from "../types/repo-config";
 import { apiClient } from "./api-client";
 import { queryKeys } from "./query-keys";
@@ -41,7 +42,8 @@ export function useCreateRepo() {
 export function useSetLlmCredential(repoId: string) {
   const invalidateRepos = useInvalidateRepos();
   return useMutation({
-    mutationFn: (apiKey: string) => apiClient.setLlmCredential(repoId, apiKey),
+    mutationFn: (params: { provider: LlmProvider; apiKey: string }) =>
+      apiClient.setLlmCredential(repoId, params),
     onSuccess: invalidateRepos,
   });
 }
