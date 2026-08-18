@@ -11,9 +11,9 @@ describe("pullRequestUrl", () => {
 });
 
 describe("GITHUB_TOKEN_URL", () => {
-  it("points to the classic PAT creation page with the 'repo' scope pre-selected", () => {
+  it("points to the classic PAT creation page with 'repo' and 'workflow' scopes pre-selected", () => {
     expect(GITHUB_TOKEN_URL).toBe(
-      "https://github.com/settings/tokens/new?description=Bella+Reviewer&scopes=repo",
+      "https://github.com/settings/tokens/new?description=Bella+Reviewer&scopes=repo,workflow",
     );
   });
 });
