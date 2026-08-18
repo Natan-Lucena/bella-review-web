@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Logo } from "../../components/Logo";
 import { StepProgress } from "../../components/StepProgress";
+import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import { Step1RepoSelection } from "./steps/Step1RepoSelection";
 import { Step2Method } from "./steps/Step2Method";
 import { Step3LlmCredential } from "./steps/Step3LlmCredential";
@@ -15,10 +16,11 @@ import type { WizardStep } from "./wizardReducer";
 // Passo 6 (sucesso) não tem entrada aqui de propósito: StepProgress some
 // nesse passo (ver `state.step < 6` abaixo), então ele nunca precisa de um
 // nome — não é uma omissão, é o passo terminal, fora da contagem "Passo X de 5".
-const STEP_NAMES: Record<Exclude<WizardStep, 6>, string> = {
+// Passo 3 não entra aqui — depende do provedor escolhido (LLM_PROVIDER_CATALOG),
+// calculado junto de `stepName` abaixo.
+const STEP_NAMES: Record<Exclude<WizardStep, 3 | 6>, string> = {
   1: "Repositório",
   2: "Integração",
-  3: "Gemini",
   4: "GitHub",
   5: "Token da Action",
 };
@@ -39,7 +41,9 @@ export function WizardPage() {
       ? method === "action"
         ? "Token da Action"
         : "Segredo do webhook"
-      : STEP_NAMES[state.step as Exclude<WizardStep, 6>];
+      : state.step === 3
+        ? LLM_PROVIDER_CATALOG[state.provider].name
+        : STEP_NAMES[state.step as Exclude<WizardStep, 3 | 6>];
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -85,6 +89,8 @@ export function WizardPage() {
         {state.step === 3 && state.repoId && (
           <Step3LlmCredential
             repoId={state.repoId}
+            provider={state.provider}
+            onProviderChange={(provider) => dispatch({ type: "SET_PROVIDER", provider })}
             apiKey={state.apiKey}
             onApiKeyChange={(value) => dispatch({ type: "SET_FIELD", field: "apiKey", value })}
             onBack={() => dispatch({ type: "BACK" })}

@@ -2,10 +2,16 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import type { LlmProvider } from "../../types/llm-provider";
 import { ReviewParamsSection } from "./ReviewParamsSection";
 
-function renderOpen(onSave = vi.fn().mockResolvedValue(undefined)) {
-  const utils = render(<ReviewParamsSection isPending={false} onSave={onSave} />);
+function renderOpen(
+  onSave = vi.fn().mockResolvedValue(undefined),
+  currentProvider: LlmProvider = "gemini",
+) {
+  const utils = render(
+    <ReviewParamsSection isPending={false} onSave={onSave} currentProvider={currentProvider} />,
+  );
   return { onSave, ...utils };
 }
 
@@ -23,6 +29,14 @@ describe("ReviewParamsSection", () => {
     expect(screen.getByLabelText("Modelo")).toHaveValue("");
     expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "gemini-2.5-flash");
     expect(screen.getByLabelText("Limite de tokens por execução")).toHaveValue(null);
+  });
+
+  it("shows model suggestions/placeholder for the given provider, not always Gemini", async () => {
+    renderOpen(vi.fn(), "claude");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "claude-sonnet-4-5");
   });
 
   it("sends only the fields the user actually touched (real partial patch)", async () => {

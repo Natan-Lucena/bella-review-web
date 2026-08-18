@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { cn } from "../lib/cn";
 
@@ -10,6 +10,10 @@ type SelectableCardProps = {
   // Selo curto ao lado do título (ex. "recomendado") — tom próprio (accent),
   // não faz parte de `title` pra não virar texto corrido na mesma cor.
   badge?: string;
+  // Ícone opcional à esquerda do bloco de texto (ex.: <ProviderLogo
+  // provider="gemini" />) — puramente decorativo, aria-hidden; a informação
+  // textual equivalente já vem do `alt` do próprio ícone, se ele tiver um.
+  icon?: ReactNode;
   // Opcional: o container do grupo (ex.: Wizard Passo 2) usa isso pra mover o
   // foco de verdade pro card recém-selecionado ao navegar por seta do teclado
   // — React 19 aceita `ref` como prop comum, sem precisar de forwardRef.
@@ -27,6 +31,7 @@ export function SelectableCard({
   title,
   description,
   badge,
+  icon,
   ref,
 }: SelectableCardProps) {
   return (
@@ -56,6 +61,11 @@ export function SelectableCard({
       >
         {selected && <span className="h-2 w-2 rounded-full bg-accent" />}
       </span>
+      {icon && (
+        <span aria-hidden="true" className="mt-0.5 flex-none">
+          {icon}
+        </span>
+      )}
       <div>
         <p className="text-[16px] font-medium text-ink">
           {title}

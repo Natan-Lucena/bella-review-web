@@ -1,3 +1,5 @@
+import type { LlmProvider } from "./llm-provider";
+
 export type ServiceState = "active" | "configuration_pending" | "inactive";
 
 export type Repo = {
@@ -9,7 +11,7 @@ export type Repo = {
   // outro jeito no cliente: não existe endpoint que exponha o status
   // individual de cada credencial. Ver PRD da Fase 2.
   configComplete: boolean;
-  llmProvider: string;
+  llmProvider: LlmProvider;
   model: string;
 };
 

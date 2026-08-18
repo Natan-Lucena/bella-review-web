@@ -72,12 +72,15 @@ describe("listRepos", () => {
     expect(bellaWeb).toMatchObject({
       configComplete: false,
       active: true,
-      llmProvider: "Gemini",
+      llmProvider: "gemini",
     });
+    // llmProvider vem de RepoConfig, que sempre existe (com default "gemini")
+    // desde a criação do repo — diferente de "model", que só reflete um
+    // valor real depois que a primeira credencial LLM é configurada.
     expect(bellaAction).toMatchObject({
       configComplete: false,
       active: false,
-      llmProvider: "",
+      llmProvider: "gemini",
       model: "",
     });
   });
@@ -106,7 +109,7 @@ describe("credentials and configComplete", () => {
   it("flips configComplete to true only once all four credentials exist", async () => {
     const repo = await createRepo("org/repo-em-configuracao");
 
-    await setLlmCredential(repo.id, "gemini-key");
+    await setLlmCredential(repo.id, { provider: "gemini", apiKey: "gemini-key" });
     await setScmCredential(repo.id, "github-pat");
     await generateActionToken(repo.id);
     let { repos } = await listRepos();

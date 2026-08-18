@@ -72,8 +72,8 @@ describe("App journeys", () => {
     await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 
-    await screen.findByRole("heading", { name: "Sua chave do Gemini" });
-    await user.type(screen.getByLabelText("Chave da API"), "gemini-key-nova");
+    await screen.findByRole("heading", { name: "Escolha o provedor de LLM" });
+    await user.type(screen.getByLabelText("Chave da API do Gemini"), "gemini-key-nova");
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 
     await screen.findByRole("heading", { name: "Seu Personal Access Token do GitHub" });

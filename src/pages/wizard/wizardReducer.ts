@@ -1,3 +1,5 @@
+import type { LlmProvider } from "../../types/llm-provider";
+
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type IntegrationMethod = "action" | "webhook";
@@ -11,17 +13,21 @@ export type WizardState = {
   method: IntegrationMethod | null;
   repoId: string | null;
   fullName: string;
+  provider: LlmProvider;
   apiKey: string;
   pat: string;
   revealedSecret: RevealedSecret | null;
   ack: boolean;
 };
 
+// Gemini como default — provedor mais maduro/testado da plataforma até aqui,
+// mesmo racional de DEFAULT_LLM_PROVIDER no backend (23-...md).
 export const initialWizardState: WizardState = {
   step: 1,
   method: null,
   repoId: null,
   fullName: "",
+  provider: "gemini",
   apiKey: "",
   pat: "",
   revealedSecret: null,
@@ -33,6 +39,7 @@ export type WizardAction =
   | { type: "BACK" }
   | { type: "SET_METHOD"; method: IntegrationMethod }
   | { type: "SET_FIELD"; field: "fullName" | "apiKey" | "pat"; value: string }
+  | { type: "SET_PROVIDER"; provider: LlmProvider }
   | { type: "SET_REPO_ID"; repoId: string }
   | { type: "REVEAL_SECRET"; secret: RevealedSecret }
   | { type: "SET_ACK"; ack: boolean };
@@ -51,6 +58,8 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, method: action.method };
     case "SET_FIELD":
       return { ...state, [action.field]: action.value };
+    case "SET_PROVIDER":
+      return { ...state, provider: action.provider };
     case "SET_REPO_ID":
       return { ...state, repoId: action.repoId };
     case "REVEAL_SECRET":

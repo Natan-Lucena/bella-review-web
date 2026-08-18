@@ -1,3 +1,4 @@
+import type { LlmProvider } from "./llm-provider";
 import type { ServiceState } from "./repo";
 
 export type DashboardPeriod = "7d" | "30d" | "90d";
@@ -17,7 +18,7 @@ export type DashboardUsage = {
 export type Dashboard = {
   period: DashboardPeriod;
   usage: DashboardUsage;
-  activeLlmProvider: string;
+  activeLlmProvider: LlmProvider;
   activeModel: string;
   serviceState: ServiceState;
 };

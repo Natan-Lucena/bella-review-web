@@ -4,11 +4,11 @@ import { Accordion } from "../../components/Accordion";
 import { Button } from "../../components/Button";
 import { FormField } from "../../components/FormField";
 import { TagInput } from "../../components/TagInput";
+import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
+import type { LlmProvider } from "../../types/llm-provider";
 import type { RepoConfigPatch } from "../../types/repo-config";
 
 const CATEGORY_SUGGESTIONS = ["security", "performance", "correctness", "error-handling"];
-const MODEL_SUGGESTIONS = ["gemini-2.5-flash", "gemini-2.5-pro"];
-const MODEL_PLACEHOLDER = "gemini-2.5-flash";
 const TOKEN_LIMIT_PLACEHOLDER = "100000";
 // Valor neutro só pra o slider ter uma posição inicial — não é enviado
 // a menos que o usuário efetivamente mexa nele (ver `temperatureTouched`).
@@ -17,6 +17,11 @@ const TEMPERATURE_NEUTRAL = 1;
 type ReviewParamsSectionProps = {
   isPending: boolean;
   onSave: (patch: RepoConfigPatch) => Promise<unknown>;
+  // Provedor conhecido do repositório (repo?.llmProvider, useRepo(repoId) em
+  // SettingsPage) — decide de qual provedor vêm as sugestões/placeholder de
+  // modelo. "gemini" (o default da plataforma) quando ainda não é conhecido
+  // (cache vazio). Ver 17-...md.
+  currentProvider: LlmProvider;
 };
 
 // Bloco 6.4 — Parâmetros de review. Deliberadamente fora do wizard (os
@@ -26,7 +31,12 @@ type ReviewParamsSectionProps = {
 // de fato mexeu nele. O PATCH enviado inclui só os campos tocados, nunca um
 // valor "razoável" não mexido — evita sobrescrever silenciosamente uma
 // configuração real já salva no backend.
-export function ReviewParamsSection({ isPending, onSave }: ReviewParamsSectionProps) {
+export function ReviewParamsSection({
+  isPending,
+  onSave,
+  currentProvider,
+}: ReviewParamsSectionProps) {
+  const catalogEntry = LLM_PROVIDER_CATALOG[currentProvider];
   const [model, setModel] = useState("");
   const [modelTouched, setModelTouched] = useState(false);
   const [tokenLimit, setTokenLimit] = useState("");
@@ -71,11 +81,11 @@ export function ReviewParamsSection({ isPending, onSave }: ReviewParamsSectionPr
               setModelTouched(true);
               setSaved(false);
             }}
-            placeholder={MODEL_PLACEHOLDER}
+            placeholder={catalogEntry.modelPlaceholder}
             className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
           />
           <datalist id="settings-model-options">
-            {MODEL_SUGGESTIONS.map((suggestion) => (
+            {catalogEntry.modelSuggestions.map((suggestion) => (
               <option key={suggestion} value={suggestion} />
             ))}
           </datalist>

@@ -3,6 +3,7 @@ import type { CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod } from "../types/dashboard";
 import type { InstallActionResult, ListGithubReposResponse } from "../types/github";
+import type { LlmProvider } from "../types/llm-provider";
 import type { ListReposResponse } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -43,8 +44,11 @@ export function createRepo(fullName: string): Promise<{ id: string }> {
   return request("/repos", { method: "POST", body: { fullName } });
 }
 
-export function setLlmCredential(repoId: string, apiKey: string): Promise<Credential> {
-  return request(`/repos/${repoId}/credentials/llm`, { method: "POST", body: { apiKey } });
+export function setLlmCredential(
+  repoId: string,
+  params: { provider: LlmProvider; apiKey: string },
+): Promise<Credential> {
+  return request(`/repos/${repoId}/credentials/llm`, { method: "POST", body: params });
 }
 
 export function setScmCredential(repoId: string, pat: string): Promise<Credential> {
