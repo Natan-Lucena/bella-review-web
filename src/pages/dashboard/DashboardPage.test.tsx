@@ -108,4 +108,45 @@ describe("DashboardPage", () => {
     expect(await screen.findByText("66,7%")).toBeInTheDocument(); // 7d applyRate
     expect(screen.queryByText("75%")).not.toBeInTheDocument();
   });
+
+  describe("editing the active LLM config (18-configuracao-de-llm-no-painel.md)", () => {
+    it("switching provider + saving a new key updates the title, with no manual invalidation needed", async () => {
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await screen.findByText("Gemini · gemini-2.5-flash");
+
+      await user.click(screen.getByRole("button", { name: /Configuração ativa/ }));
+      await user.click(screen.getByRole("radio", { name: "Claude" }));
+      await user.type(screen.getByLabelText("Chave da API da Anthropic"), "fake-claude-key-123");
+      await user.click(screen.getByRole("button", { name: "Salvar provedor e chave" }));
+
+      // Default model for the new provider, from the catalog — this repo's
+      // saved model wasn't touched, only the provider/key were.
+      expect(await screen.findByText("Claude · claude-sonnet-4-5")).toBeInTheDocument();
+      expect(screen.queryByText("Gemini · gemini-2.5-flash")).not.toBeInTheDocument();
+    });
+
+    it("switching only the model doesn't require filling the API key field", async () => {
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await screen.findByText("Gemini · gemini-2.5-flash");
+
+      await user.click(screen.getByRole("button", { name: /Configuração ativa/ }));
+      expect(screen.getByLabelText("Chave da API do Gemini")).toHaveValue("");
+      await user.type(screen.getByLabelText("Modelo"), "gemini-2.5-pro");
+      await user.click(screen.getByRole("button", { name: "Salvar modelo" }));
+
+      expect(await screen.findByText("Gemini · gemini-2.5-pro")).toBeInTheDocument();
+    });
+
+    it("keeps 'Salvar provedor e chave' disabled until a key is typed", async () => {
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: /Configuração ativa/ }));
+
+      expect(screen.getByRole("button", { name: "Salvar provedor e chave" })).toBeDisabled();
+      await user.type(screen.getByLabelText("Chave da API do Gemini"), "x");
+      expect(screen.getByRole("button", { name: "Salvar provedor e chave" })).toBeEnabled();
+    });
+  });
 });

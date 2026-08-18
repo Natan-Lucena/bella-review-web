@@ -9,9 +9,9 @@ import { useRepoDashboard } from "../../data/dashboard";
 import { cn } from "../../lib/cn";
 import { ESTIMATED_COST_TOOLTIP } from "../../lib/cost-copy";
 import { formatCurrency, formatNumber } from "../../lib/format-number";
-import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import type { DashboardPeriod } from "../../types/dashboard";
 import { AcceptanceMetricsSection } from "./AcceptanceMetricsSection";
+import { ActiveConfigSection } from "./ActiveConfigSection";
 import { PeriodSelector } from "./PeriodSelector";
 
 const REASONING_TOOLTIP =
@@ -45,17 +45,15 @@ export function DashboardPage() {
   const [period, setPeriod] = useState<DashboardPeriod>("30d");
   const { data: dashboard, isPending } = useRepoDashboard(repoId, period);
 
-  const modelLine = dashboard?.activeModel
-    ? `${LLM_PROVIDER_CATALOG[dashboard.activeLlmProvider].name} · ${dashboard.activeModel}`
-    : "Ainda não configurada";
-
   const header = (
     <>
       <PageHeader level="h2" title="Painel" />
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-ink-muted">
-          Configuração ativa · <span className="text-ink">{modelLine}</span>
-        </p>
+        <ActiveConfigSection
+          repoId={repoId}
+          currentProvider={dashboard?.activeLlmProvider}
+          currentModel={dashboard?.activeModel}
+        />
         <PeriodSelector period={period} onChange={setPeriod} />
       </div>
     </>
