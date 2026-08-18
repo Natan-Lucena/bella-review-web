@@ -2,8 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "../../lib/api-error";
+import * as apiClient from "../../mocks/api-client";
 import { resetMockData } from "../../mocks/api-client";
 import { WizardPage } from "./WizardPage";
 
@@ -82,7 +84,9 @@ describe("WizardPage", () => {
     renderWizard();
     const user = userEvent.setup();
 
-    expect(screen.getByRole("heading", { name: "Qual repositório a Bella vai revisar?" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Qual repositório a Bella vai revisar?" }),
+    ).toBeInTheDocument();
     const connectButton = screen.getByRole("button", { name: "Conectar" });
     expect(connectButton).toBeDisabled();
 
@@ -156,6 +160,58 @@ describe("WizardPage", () => {
     await screen.findByRole("heading", { name: "Como a Bella vai ser acionada?" });
   });
 
+  it("shows a scope-specific message when the token lacks 'workflow', not the generic one", async () => {
+    vi.spyOn(apiClient, "installAction").mockRejectedValueOnce(
+      new ApiError(
+        "github_insufficient_scope",
+        "The provided token doesn't have permission to open a pull request on this repository",
+      ),
+    );
+    renderWizard();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_connect_token");
+    await user.click(screen.getByRole("button", { name: "Conectar" }));
+    await screen.findByText("Natan-Lucena/side-project");
+    await user.click(screen.getByRole("button", { name: /Natan-Lucena\/side-project/ }));
+    await screen.findByRole("heading", { name: "Como instalar a Action?" });
+
+    await user.click(screen.getByRole("radio", { name: /Deixa a Bella abrir o Pull Request/ }));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar e abrir PR" }));
+
+    expect(
+      await screen.findByText(/Gere um novo token com o escopo "workflow" habilitado/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Não foi possível abrir o Pull Request agora. Tente de novo ou siga manualmente.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("falls back to the generic error message for any other install-action failure", async () => {
+    vi.spyOn(apiClient, "installAction").mockRejectedValueOnce(
+      new ApiError("github_auth_failed", "GitHub rejected the provided token"),
+    );
+    renderWizard();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Personal Access Token"), "ghp_connect_token");
+    await user.click(screen.getByRole("button", { name: "Conectar" }));
+    await screen.findByText("Natan-Lucena/side-project");
+    await user.click(screen.getByRole("button", { name: /Natan-Lucena\/side-project/ }));
+    await screen.findByRole("heading", { name: "Como instalar a Action?" });
+
+    await user.click(screen.getByRole("radio", { name: /Deixa a Bella abrir o Pull Request/ }));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar e abrir PR" }));
+
+    expect(
+      await screen.findByText(
+        "Não foi possível abrir o Pull Request agora. Tente de novo ou siga manualmente.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("pre-fills Step 4's PAT field with the token connected back in Step 1", async () => {
     renderWizard();
     const user = userEvent.setup();
@@ -204,7 +260,10 @@ describe("WizardPage", () => {
     expect(await screen.findByText("Seu token")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Abrir a tela de novo secret no GitHub/ }),
-    ).toHaveAttribute("href", "https://github.com/minha-org/repo-action/settings/secrets/actions/new");
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/minha-org/repo-action/settings/secrets/actions/new",
+    );
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 
     expect(

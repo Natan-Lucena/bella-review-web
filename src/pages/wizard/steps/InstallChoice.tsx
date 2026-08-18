@@ -4,6 +4,7 @@ import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { SelectableCard } from "../../../components/SelectableCard";
 import { useInstallAction } from "../../../data/repos";
+import { ApiError } from "../../../lib/api-error";
 
 type InstallChoiceProps = {
   fullName: string;
@@ -42,6 +43,13 @@ export function InstallChoice({ fullName, repoId, pat, onSkip, onInstalled }: In
       setPrUrl(result.prUrl);
     } catch (err) {
       console.error(`Failed to install the Action on ${fullName}:`, err);
+      if (err instanceof ApiError && err.code === "github_insufficient_scope") {
+        setError(
+          "O token conectado não tem permissão para criar o workflow. Gere um novo token " +
+            'com o escopo "workflow" habilitado e cole-o de novo no passo anterior.',
+        );
+        return;
+      }
       setError("Não foi possível abrir o Pull Request agora. Tente de novo ou siga manualmente.");
     }
   }
@@ -73,9 +81,17 @@ export function InstallChoice({ fullName, repoId, pat, onSkip, onInstalled }: In
 
   return (
     <div>
-      <PageHeader level="h1" title="Como instalar a Action?" description={`Repositório: ${fullName}`} />
+      <PageHeader
+        level="h1"
+        title="Como instalar a Action?"
+        description={`Repositório: ${fullName}`}
+      />
 
-      <div role="radiogroup" aria-label="Como instalar a Action" className="mt-8 flex flex-col gap-3">
+      <div
+        role="radiogroup"
+        aria-label="Como instalar a Action"
+        className="mt-8 flex flex-col gap-3"
+      >
         <SelectableCard
           selected={choice === "manual"}
           onSelect={() => {
