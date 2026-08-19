@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { resetMockData } from "../../mocks/api-client";
+import { resetMockData, updateRepoConfig } from "../../mocks/api-client";
 import { DashboardPage } from "./DashboardPage";
 
 function renderDashboard(repoId: string) {
@@ -156,9 +156,7 @@ describe("DashboardPage", () => {
       // no manual invalidation needed, same hierarchical query-key
       // mechanism the rest of the app already relies on.
       await user.click(screen.getByRole("button", { name: "Fechar" }));
-      expect(
-        await screen.findByRole("button", { name: /claude-sonnet-5/ }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: /claude-sonnet-5/ })).toBeInTheDocument();
     });
 
     it("switching only the model doesn't require filling the API key field", async () => {
@@ -188,6 +186,38 @@ describe("DashboardPage", () => {
       expect(modelSelect.tagName).toBe("SELECT");
       const optionValues = Array.from(modelSelect.options).map((option) => option.value);
       expect(optionValues).toEqual(["", "gemini-3.7-flash", "gemini-2.5-pro", "gemini-2.5-flash"]);
+    });
+
+    it("pre-fills the model dropdown with the currently active model", async () => {
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await screen.findByText("gemini-2.5-flash");
+      await user.click(screen.getByRole("button", { name: /Configuração ativa/ }));
+      await user.click(screen.getByRole("button", { name: "Editar modelo" }));
+
+      expect(screen.getByLabelText("Modelo")).toHaveValue("gemini-2.5-flash");
+    });
+
+    it("keeps a stale model (no longer in the catalog) selectable instead of showing the dropdown blank", async () => {
+      // Simulates a repo configured before a catalog update — its saved
+      // model isn't one of the current suggestions for its provider.
+      await updateRepoConfig("repo-bella-api", { model: "gemini-1.5-flash" });
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await screen.findByText("gemini-1.5-flash");
+      await user.click(screen.getByRole("button", { name: /Configuração ativa/ }));
+      await user.click(screen.getByRole("button", { name: "Editar modelo" }));
+
+      const modelSelect = screen.getByLabelText("Modelo") as HTMLSelectElement;
+      expect(modelSelect).toHaveValue("gemini-1.5-flash");
+      const optionValues = Array.from(modelSelect.options).map((option) => option.value);
+      expect(optionValues).toEqual([
+        "",
+        "gemini-1.5-flash",
+        "gemini-3.7-flash",
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+      ]);
     });
 
     it("keeps 'Salvar provedor e chave' disabled until a key is typed", async () => {

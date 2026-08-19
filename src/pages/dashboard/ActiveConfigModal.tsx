@@ -38,13 +38,27 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
   const [selectedProvider, setSelectedProvider] = useState<LlmProvider>(knownProvider);
   const [apiKey, setApiKey] = useState("");
   const [credentialError, setCredentialError] = useState<string | null>(null);
-  const [model, setModel] = useState("");
+  // Pré-preenchido com o modelo ativo — mesmo racional do `knownProvider`
+  // acima. Não marca `modelTouched`: reabrir o dropdown e re-selecionar o
+  // mesmo valor não dispara onChange (o HTML só dispara em mudança real), e
+  // "Salvar modelo" continua exigindo uma escolha diferente da atual.
+  const [model, setModel] = useState(currentModel ?? "");
   const [modelTouched, setModelTouched] = useState(false);
 
   const setLlmCredential = useSetLlmCredential(repoId);
   const updateRepoConfig = useUpdateRepoConfig(repoId);
   const catalogEntry = LLM_PROVIDER_CATALOG[selectedProvider];
   const configured = currentProvider && currentModel;
+  // O catálogo muda com o tempo (ver 18-...md) — um repositório configurado
+  // antes de uma atualização de catálogo pode ter um modelo salvo que não
+  // está mais entre as sugestões do provedor. Sem isso, o <select> ficaria
+  // em branco (value sem <option> correspondente) mesmo com um modelo ativo
+  // de verdade, escondendo o valor real em vez de mostrar "Selecione um
+  // modelo" — pior que o placeholder que essa pré-seleção veio substituir.
+  const modelOptions =
+    model && !catalogEntry.modelSuggestions.includes(model)
+      ? [model, ...catalogEntry.modelSuggestions]
+      : catalogEntry.modelSuggestions;
 
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -191,7 +205,7 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
                   <option value="" disabled>
                     Selecione um modelo
                   </option>
-                  {catalogEntry.modelSuggestions.map((suggestion) => (
+                  {modelOptions.map((suggestion) => (
                     <option key={suggestion} value={suggestion}>
                       {suggestion}
                     </option>
