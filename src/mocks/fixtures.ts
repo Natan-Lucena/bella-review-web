@@ -16,6 +16,17 @@ export type SeedUser = {
   password: string;
 };
 
+// Escopado por userId, mesmo padrão de RepoRecord/RepoConfig — cada prompt
+// pertence a um usuário só (ver PRD 27, seção 1, "unique([userId, name])").
+export type PromptRecord = {
+  id: string;
+  userId: string;
+  name: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ReviewRunRecord = {
   id: string;
   prNumber: number;
@@ -103,6 +114,31 @@ function agentTurn(
 
 export const seedUsers: SeedUser[] = [
   { id: "user-1", email: "ana@example.com", password: "senha1234" },
+];
+
+// Nenhum repositório seed referencia um destes por padrão (RepoRecord.config.promptId
+// nasce null em todos os três, mesmo estado do backend real após a migração da PRD
+// 27) — mantém o dataset inicial simples; um teste que precise de um repositório já
+// apontando para um prompt pode montar isso explicitamente.
+export const seedPrompts: PromptRecord[] = [
+  {
+    id: "prompt-security-focus",
+    userId: "user-1",
+    name: "Security-first review",
+    content:
+      "Focus primarily on security vulnerabilities: injection, auth bypass, secrets committed to the repo, unsafe deserialization. Only flag other categories if the issue is severe.",
+    createdAt: isoOffset(30, 0),
+    updatedAt: isoOffset(30, 0),
+  },
+  {
+    id: "prompt-concise-style",
+    userId: "user-1",
+    name: "Concise comments",
+    content:
+      "Keep every comment to at most two sentences. Skip style nitpicks entirely — only point out correctness and security issues.",
+    createdAt: isoOffset(15, 0),
+    updatedAt: isoOffset(10, 0),
+  },
 ];
 
 // bella-api: repositório maduro, totalmente configurado — serviceState
@@ -297,6 +333,7 @@ const bellaApi: RepoRecord = {
     tokenLimit: 100000,
     temperature: 0.2,
     enabledCategories: ["security", "performance"],
+    promptId: null,
   },
   dashboardUsageByPeriod: {
     "7d": {
@@ -380,6 +417,7 @@ const bellaWeb: RepoRecord = {
     tokenLimit: 100000,
     temperature: 0.2,
     enabledCategories: [],
+    promptId: null,
   },
   dashboardUsageByPeriod: {
     "7d": {
@@ -488,6 +526,7 @@ const bellaAction: RepoRecord = {
     tokenLimit: 100000,
     temperature: 0.2,
     enabledCategories: [],
+    promptId: null,
   },
   dashboardUsageByPeriod: {
     "7d": {

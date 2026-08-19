@@ -115,6 +115,7 @@ export function SettingsPage() {
         isPending={updateRepoConfig.isPending}
         onSave={(patch) => updateRepoConfig.mutateAsync(patch)}
         currentProvider={currentProvider}
+        currentPromptId={repo?.promptId ?? null}
       />
 
       {modal && (

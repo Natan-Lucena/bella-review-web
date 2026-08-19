@@ -4,6 +4,7 @@ import { Accordion } from "../../components/Accordion";
 import { Button } from "../../components/Button";
 import { FormField } from "../../components/FormField";
 import { TagInput } from "../../components/TagInput";
+import { usePrompts } from "../../data/prompts";
 import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import type { LlmProvider } from "../../types/llm-provider";
 import type { RepoConfigPatch } from "../../types/repo-config";
@@ -22,21 +23,33 @@ type ReviewParamsSectionProps = {
   // modelo. "gemini" (o default da plataforma) quando ainda não é conhecido
   // (cache vazio). Ver 17-...md.
   currentProvider: LlmProvider;
+  // promptId conhecido do repositório (repo?.promptId, useRepo(repoId) em
+  // SettingsPage) — diferente de todo outro campo deste componente, este É
+  // exposto por GET /repos, então o seletor nasce pré-preenchido com o valor
+  // real em vez de vazio/neutro. Ver PRD 19, seção 6, "Motivação e contexto".
+  currentPromptId: string | null;
 };
 
 // Bloco 6.4 — Parâmetros de review. Deliberadamente fora do wizard (os
 // padrões já funcionam sozinhos). Sem endpoint de leitura (ver PRD da Fase 2,
-// "Tela 6 escreve às cegas"), este bloco não sabe os valores atuais — cada
-// campo nasce vazio/neutro (só placeholder visual) e rastreia se o usuário
-// de fato mexeu nele. O PATCH enviado inclui só os campos tocados, nunca um
-// valor "razoável" não mexido — evita sobrescrever silenciosamente uma
+// "Tela 6 escreve às cegas"), este bloco não sabe os valores atuais de
+// model/tokenLimit/temperature/enabledCategories — cada um desses nasce
+// vazio/neutro (só placeholder visual) e rastreia se o usuário de fato mexeu
+// nele. `promptId` é a exceção deliberada: GET /repos já expõe esse campo,
+// então o seletor de prompt nasce pré-preenchido com o valor real
+// (`currentPromptId`) em vez de vazio — ver PRD 19, seção 6. Todo campo
+// (inclusive o prompt) só entra no PATCH se de fato tocado; nunca um valor
+// "razoável" não mexido — evita sobrescrever silenciosamente uma
 // configuração real já salva no backend.
 export function ReviewParamsSection({
   isPending,
   onSave,
   currentProvider,
+  currentPromptId,
 }: ReviewParamsSectionProps) {
   const catalogEntry = LLM_PROVIDER_CATALOG[currentProvider];
+  const { data: promptsData } = usePrompts();
+  const prompts = promptsData?.prompts ?? [];
   const [model, setModel] = useState("");
   const [modelTouched, setModelTouched] = useState(false);
   const [tokenLimit, setTokenLimit] = useState("");
@@ -45,7 +58,29 @@ export function ReviewParamsSection({
   const [temperatureTouched, setTemperatureTouched] = useState(false);
   const [enabledCategories, setEnabledCategories] = useState<string[]>([]);
   const [categoriesTouched, setCategoriesTouched] = useState(false);
+  // Diferente dos campos acima, promptId É exposto por GET /repos — nasce
+  // pré-preenchido com o valor real (currentPromptId), não vazio/neutro. Ver
+  // PRD 19, seção 6.
+  const [promptSelection, setPromptSelection] = useState(currentPromptId ?? "");
+  const [promptTouched, setPromptTouched] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // `useState(currentPromptId ?? "")` só captura o valor no mount — em
+  // SettingsPage.tsx, `useRepo(repoId)` (por trás de `useRepos()`) ainda não
+  // resolveu na primeira renderização real da tela (é um fetch de rede, não
+  // instantâneo), então `currentPromptId` chega `null` no mount e o select
+  // travaria em "Bella Default Skill" pra sempre, mesmo depois do fetch
+  // trazer o valor real (confirmado ao vivo contra o backend real). Ajuste
+  // durante a própria renderização (não um efeito — "You Might Not Need an
+  // Effect") sempre que o valor real chega, mas só enquanto o usuário não
+  // mexeu no campo — não sobrescreve uma escolha já feita na mesma sessão.
+  const [lastSeenPromptId, setLastSeenPromptId] = useState(currentPromptId);
+  if (currentPromptId !== lastSeenPromptId) {
+    setLastSeenPromptId(currentPromptId);
+    if (!promptTouched) {
+      setPromptSelection(currentPromptId ?? "");
+    }
+  }
 
   async function handleSave() {
     const patch: RepoConfigPatch = {};
@@ -60,6 +95,9 @@ export function ReviewParamsSection({
     }
     if (categoriesTouched) {
       patch.enabledCategories = enabledCategories;
+    }
+    if (promptTouched) {
+      patch.promptId = promptSelection === "" ? null : promptSelection;
     }
     if (Object.keys(patch).length === 0) {
       return;
@@ -134,6 +172,26 @@ export function ReviewParamsSection({
             className="w-full max-w-[420px] accent-accent"
           />
         </div>
+
+        <FormField label="Prompt de review" htmlFor="settings-prompt">
+          <select
+            id="settings-prompt"
+            value={promptSelection}
+            onChange={(event) => {
+              setPromptSelection(event.target.value);
+              setPromptTouched(true);
+              setSaved(false);
+            }}
+            className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
+          >
+            <option value="">Bella Default Skill</option>
+            {prompts.map((prompt) => (
+              <option key={prompt.id} value={prompt.id}>
+                {prompt.name}
+              </option>
+            ))}
+          </select>
+        </FormField>
 
         <div>
           <span className="mb-2.5 block text-[13.5px] text-ink-muted">Categorias habilitadas</span>

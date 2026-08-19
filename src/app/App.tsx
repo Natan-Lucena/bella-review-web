@@ -5,6 +5,7 @@ import { DashboardPage } from "../pages/dashboard/DashboardPage";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { LandingPage } from "../pages/landing/LandingPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { PromptsPage } from "../pages/prompts/PromptsPage";
 import { ReposListPage } from "../pages/repos-list/ReposListPage";
 import { RunDetailPage } from "../pages/run-detail/RunDetailPage";
 import { RunsPage } from "../pages/runs/RunsPage";
@@ -48,6 +49,7 @@ export function App() {
         }
       >
         <Route path="/repos" element={<ReposListPage />} />
+        <Route path="/prompts" element={<PromptsPage />} />
         <Route path="/repos/:id" element={<RepoAreaLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="runs" element={<RunsPage />} />

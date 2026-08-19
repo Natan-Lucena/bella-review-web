@@ -13,6 +13,7 @@ export type Repo = {
   configComplete: boolean;
   llmProvider: LlmProvider;
   model: string;
+  promptId: string | null;
 };
 
 export type ListReposResponse = {

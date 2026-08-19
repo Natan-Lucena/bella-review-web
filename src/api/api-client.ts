@@ -4,6 +4,12 @@ import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../
 import type { Dashboard, DashboardPeriod } from "../types/dashboard";
 import type { InstallActionResult, ListGithubReposResponse } from "../types/github";
 import type { LlmProvider } from "../types/llm-provider";
+import type {
+  CreatePromptInput,
+  ListPromptsResponse,
+  Prompt,
+  UpdatePromptInput,
+} from "../types/prompt";
 import type { ListReposResponse } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -105,4 +111,20 @@ export function listComments(
   filters: CommentFilters = {},
 ): Promise<ListCommentsResponse> {
   return request(`/repos/${repoId}/comments`, { query: filters });
+}
+
+export function listPrompts(): Promise<ListPromptsResponse> {
+  return request("/prompts");
+}
+
+export function createPrompt(input: CreatePromptInput): Promise<Prompt> {
+  return request("/prompts", { method: "POST", body: input });
+}
+
+export function updatePrompt(id: string, patch: UpdatePromptInput): Promise<Prompt> {
+  return request(`/prompts/${id}`, { method: "PATCH", body: patch });
+}
+
+export function deletePrompt(id: string): Promise<void> {
+  return request(`/prompts/${id}`, { method: "DELETE" });
 }

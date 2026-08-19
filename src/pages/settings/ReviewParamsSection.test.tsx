@@ -1,19 +1,38 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import * as apiClient from "../../mocks/api-client";
+import { resetMockData } from "../../mocks/api-client";
 import type { LlmProvider } from "../../types/llm-provider";
 import { ReviewParamsSection } from "./ReviewParamsSection";
 
 function renderOpen(
   onSave = vi.fn().mockResolvedValue(undefined),
   currentProvider: LlmProvider = "gemini",
+  currentPromptId: string | null = null,
 ) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const utils = render(
-    <ReviewParamsSection isPending={false} onSave={onSave} currentProvider={currentProvider} />,
+    <QueryClientProvider client={queryClient}>
+      <ReviewParamsSection
+        isPending={false}
+        onSave={onSave}
+        currentProvider={currentProvider}
+        currentPromptId={currentPromptId}
+      />
+    </QueryClientProvider>,
   );
   return { onSave, ...utils };
 }
+
+beforeEach(async () => {
+  resetMockData();
+  // usePrompts() (listPrompts) exige uma sessão mock ativa, mesmo padrão de
+  // DeletePromptModal.test.tsx.
+  await apiClient.login("ana@example.com", "senha1234");
+});
 
 describe("ReviewParamsSection", () => {
   it("starts collapsed", () => {
@@ -29,6 +48,21 @@ describe("ReviewParamsSection", () => {
     expect(screen.getByLabelText("Modelo")).toHaveValue("");
     expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "gemini-3.7-flash");
     expect(screen.getByLabelText("Limite de tokens por execução")).toHaveValue(null);
+    // Sem currentPromptId, o seletor de prompt nasce em "Bella Default
+    // Skill" (value=""), o mesmo estado neutro dos demais campos.
+    expect(screen.getByLabelText("Prompt de review")).toHaveValue("");
+  });
+
+  it("unlike model/tokenLimit (blind, no read endpoint), the prompt select starts pre-filled with currentPromptId, since promptId IS exposed by GET /repos", async () => {
+    renderOpen(vi.fn(), "gemini", "prompt-security-focus");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    expect(await screen.findByRole("option", { name: "Security-first review" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Prompt de review")).toHaveValue("prompt-security-focus");
+    // Confirms the asymmetry explicitly: model/tokenLimit stay blank even
+    // though this same render call also has a real prompt pre-selected.
+    expect(screen.getByLabelText("Modelo")).toHaveValue("");
   });
 
   it("shows model suggestions/placeholder for the given provider, not always Gemini", async () => {
@@ -83,5 +117,79 @@ describe("ReviewParamsSection", () => {
     await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
 
     expect(onSave).toHaveBeenCalledWith({ enabledCategories: ["performance"] });
+  });
+
+  it("selecting a different prompt and saving sends promptId as that prompt's id string", async () => {
+    const { onSave } = renderOpen();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    await screen.findByRole("option", { name: "Concise comments" });
+    await user.selectOptions(screen.getByLabelText("Prompt de review"), "prompt-concise-style");
+    await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
+
+    expect(onSave).toHaveBeenCalledWith({ promptId: "prompt-concise-style" });
+  });
+
+  it("selecting 'Bella Default Skill' after a prompt was already selected sends promptId: null, not an absent key", async () => {
+    const { onSave } = renderOpen(vi.fn().mockResolvedValue(undefined), "gemini", "prompt-security-focus");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    await screen.findByRole("option", { name: "Security-first review" });
+    await user.selectOptions(screen.getByLabelText("Prompt de review"), "");
+    await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
+
+    expect(onSave).toHaveBeenCalledWith({ promptId: null });
+  });
+
+  it("catches up to the real promptId once it arrives after mount (repo data resolves async in the real app)", async () => {
+    // Reproduces the real SettingsPage race: useRepo(repoId) hasn't resolved
+    // on first render, so currentPromptId starts null and only becomes the
+    // real value on a later render — useState(currentPromptId ?? "") alone
+    // would freeze on "" forever in that case (confirmed live in the browser
+    // against the real backend), since it only reads the prop at mount.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <ReviewParamsSection
+          isPending={false}
+          onSave={vi.fn().mockResolvedValue(undefined)}
+          currentProvider="gemini"
+          currentPromptId={null}
+        />
+      </QueryClientProvider>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+    expect(screen.getByLabelText("Prompt de review")).toHaveValue("");
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <ReviewParamsSection
+          isPending={false}
+          onSave={vi.fn().mockResolvedValue(undefined)}
+          currentProvider="gemini"
+          currentPromptId="prompt-security-focus"
+        />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByRole("option", { name: "Security-first review" });
+    expect(screen.getByLabelText("Prompt de review")).toHaveValue("prompt-security-focus");
+  });
+
+  it("not touching the prompt select at all does not include promptId in the patch", async () => {
+    const { onSave } = renderOpen();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    const modelInput = screen.getByLabelText("Modelo");
+    await user.type(modelInput, "gemini-2.5-pro");
+    await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
+
+    expect(onSave).toHaveBeenCalledWith({ model: "gemini-2.5-pro" });
+    const [patch] = onSave.mock.calls[0] as [Record<string, unknown>];
+    expect(patch).not.toHaveProperty("promptId");
   });
 });
