@@ -15,6 +15,9 @@ export function AppLayout() {
           <Link to="/repos" className="text-sm font-medium text-ink hover:text-accent">
             Meus repositórios
           </Link>
+          <Link to="/prompts" className="text-sm font-medium text-ink hover:text-accent">
+            Meus prompts
+          </Link>
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-8">

@@ -8,6 +8,12 @@ import type {
   ListGithubReposResponse,
 } from "../types/github";
 import type { LlmProvider } from "../types/llm-provider";
+import type {
+  CreatePromptInput,
+  ListPromptsResponse,
+  Prompt,
+  UpdatePromptInput,
+} from "../types/prompt";
 import type { ListReposResponse, Repo, ServiceState } from "../types/repo";
 import type { RepoConfig, RepoConfigPatch } from "../types/repo-config";
 import type {
@@ -20,8 +26,8 @@ import type {
 import type { LoginResponse, SignupResponse, User } from "../types/user";
 import { ApiError } from "../lib/api-error";
 import { getDefaultModelForProvider } from "../lib/llm-provider-catalog";
-import { seedRepos, seedUsers } from "./fixtures";
-import type { RepoRecord, ReviewRunRecord, SeedUser } from "./fixtures";
+import { seedPrompts, seedRepos, seedUsers } from "./fixtures";
+import type { PromptRecord, RepoRecord, ReviewRunRecord, SeedUser } from "./fixtures";
 
 // "Backend fake": funções assíncronas que espelham exatamente o formato de
 // request/response de cada endpoint documentado em
@@ -32,7 +38,9 @@ import type { RepoRecord, ReviewRunRecord, SeedUser } from "./fixtures";
 
 let users: SeedUser[] = structuredClone(seedUsers);
 let repos: RepoRecord[] = structuredClone(seedRepos);
+let prompts: PromptRecord[] = structuredClone(seedPrompts);
 let nextRepoSeq = 1;
+let nextPromptSeq = 1;
 let secretSeq = 1;
 // "Sessão" da Fase 1: o real usa um cookie httpOnly que o navegador manda
 // sozinho; aqui é só esse id em memória de módulo, setado por login() e lido
@@ -44,7 +52,9 @@ let currentUserId: string | null = null;
 export function resetMockData(): void {
   users = structuredClone(seedUsers);
   repos = structuredClone(seedRepos);
+  prompts = structuredClone(seedPrompts);
   nextRepoSeq = 1;
+  nextPromptSeq = 1;
   secretSeq = 1;
   currentUserId = null;
 }
@@ -87,6 +97,36 @@ function findRepoOrThrow(repoId: string): RepoRecord {
   return repo;
 }
 
+// Prompt é escopado por usuário (ver PRD 27, seção 1) — toda função de
+// prompts precisa da sessão mock atual, mesmo padrão de getCurrentUser().
+function requireCurrentUserId(): string {
+  if (!currentUserId) {
+    throw new ApiError("not_authenticated");
+  }
+  return currentUserId;
+}
+
+function toPrompt(record: PromptRecord): Prompt {
+  return {
+    id: record.id,
+    name: record.name,
+    content: record.content,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  };
+}
+
+// Não encontrado e não-dono devolvem o mesmo erro, mesmo raciocínio de
+// findRepoOrThrow / do use case real (ver PRD 27, seção 4) — nunca confirma
+// existência a quem não é dono.
+function findPromptOrThrow(id: string, userId: string): PromptRecord {
+  const prompt = prompts.find((candidate) => candidate.id === id && candidate.userId === userId);
+  if (!prompt) {
+    throw new ApiError("prompt_not_found");
+  }
+  return prompt;
+}
+
 // O backend só considera a configuração "completa" quando as quatro
 // credenciais existem (LLM + SCM + token da Action E segredo de webhook) —
 // mesmo os dois últimos sendo caminhos alternativos de disparo na prática
@@ -107,6 +147,7 @@ function toRepo(record: RepoRecord): Repo {
     // criação do repo, independente de já haver credencial salva ou não).
     llmProvider: record.config.llmProvider,
     model: record.llmCredential ? record.config.model : "",
+    promptId: record.config.promptId,
   };
 }
 
@@ -224,6 +265,7 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
       tokenLimit: 100000,
       temperature: 0.2,
       enabledCategories: [],
+      promptId: null,
     },
     dashboardUsageByPeriod: { "7d": emptyUsage(), "30d": emptyUsage(), "90d": emptyUsage() },
     acceptanceMetricsByPeriod: {
@@ -446,4 +488,69 @@ function matchesCommentFilters(comment: Comment, filters: CommentFilters): boole
     return false;
   }
   return true;
+}
+
+export async function listPrompts(): Promise<ListPromptsResponse> {
+  await delay(300);
+  const userId = requireCurrentUserId();
+  return { prompts: prompts.filter((prompt) => prompt.userId === userId).map(toPrompt) };
+}
+
+// Replica a checagem de nome duplicado do backend (mesmo comparação exata,
+// case-sensitive) — 409 prompt_name_already_exists, mesmo ApiError já usado
+// nos outros pontos do mock (ex.: email_already_registered em signup()).
+export async function createPrompt(input: CreatePromptInput): Promise<Prompt> {
+  await delay(400);
+  const userId = requireCurrentUserId();
+  const alreadyExists = prompts.some(
+    (prompt) => prompt.userId === userId && prompt.name === input.name,
+  );
+  if (alreadyExists) {
+    throw new ApiError("prompt_name_already_exists");
+  }
+  const now = new Date().toISOString();
+  const record: PromptRecord = {
+    id: `prompt-created-${nextPromptSeq++}`,
+    userId,
+    name: input.name,
+    content: input.content,
+    createdAt: now,
+    updatedAt: now,
+  };
+  prompts.push(record);
+  return toPrompt(record);
+}
+
+export async function updatePrompt(id: string, patch: UpdatePromptInput): Promise<Prompt> {
+  await delay(400);
+  const userId = requireCurrentUserId();
+  const record = findPromptOrThrow(id, userId);
+  if (patch.name !== undefined) {
+    const duplicate = prompts.some(
+      (prompt) => prompt.userId === userId && prompt.name === patch.name && prompt.id !== id,
+    );
+    if (duplicate) {
+      throw new ApiError("prompt_name_already_exists");
+    }
+  }
+  record.name = patch.name ?? record.name;
+  record.content = patch.content ?? record.content;
+  record.updatedAt = new Date().toISOString();
+  return toPrompt(record);
+}
+
+// Simula onDelete: SetNull do backend (ver PRD 27, seção 1) — qualquer
+// RepoRecord cujo config.promptId apontava para este prompt volta para
+// null, sem código de aplicação real no Postgres (a constraint faz isso
+// sozinha lá); aqui precisa ser feito à mão.
+export async function deletePrompt(id: string): Promise<void> {
+  await delay(400);
+  const userId = requireCurrentUserId();
+  const record = findPromptOrThrow(id, userId);
+  prompts = prompts.filter((prompt) => prompt.id !== record.id);
+  for (const repo of repos) {
+    if (repo.config.promptId === record.id) {
+      repo.config = { ...repo.config, promptId: null };
+    }
+  }
 }

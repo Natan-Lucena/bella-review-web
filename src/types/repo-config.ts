@@ -6,6 +6,7 @@ export type RepoConfig = {
   tokenLimit: number;
   temperature: number;
   enabledCategories: string[];
+  promptId: string | null;
 };
 
 // PATCH /repos/:id/config aceita um patch parcial de verdade — só os campos
