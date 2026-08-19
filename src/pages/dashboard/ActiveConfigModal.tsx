@@ -39,16 +39,19 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
   const [apiKey, setApiKey] = useState("");
   const [credentialError, setCredentialError] = useState<string | null>(null);
   // Pré-preenchido com o modelo ativo — mesmo racional do `knownProvider`
-  // acima. Não marca `modelTouched`: reabrir o dropdown e re-selecionar o
-  // mesmo valor não dispara onChange (o HTML só dispara em mudança real), e
-  // "Salvar modelo" continua exigindo uma escolha diferente da atual.
+  // acima.
   const [model, setModel] = useState(currentModel ?? "");
-  const [modelTouched, setModelTouched] = useState(false);
 
   const setLlmCredential = useSetLlmCredential(repoId);
   const updateRepoConfig = useUpdateRepoConfig(repoId);
   const catalogEntry = LLM_PROVIDER_CATALOG[selectedProvider];
   const configured = currentProvider && currentModel;
+  // Comparar direto com o valor ativo (em vez de um `modelTouched` que só
+  // registra "houve uma seleção alguma vez") cobre o caso de o usuário
+  // escolher outro modelo e depois voltar pro mesmo de antes — nesse caso
+  // não há nada de fato pra salvar, e "Salvar modelo" deve continuar
+  // desabilitado em vez de disparar um PATCH redundante.
+  const modelChanged = model.trim().length > 0 && model !== (currentModel ?? "");
   // O catálogo muda com o tempo (ver 18-...md) — um repositório configurado
   // antes de uma atualização de catálogo pode ter um modelo salvo que não
   // está mais entre as sugestões do provedor. Sem isso, o <select> ficaria
@@ -92,11 +95,10 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
   }
 
   async function handleSaveModel() {
-    if (!modelTouched || model.trim().length === 0) {
+    if (!modelChanged) {
       return;
     }
     await updateRepoConfig.mutateAsync({ model: model.trim() });
-    setModelTouched(false);
     setMode("view");
   }
 
@@ -163,7 +165,6 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
                       // outra agora, então qualquer seleção anterior deixa de
                       // fazer sentido.
                       setModel("");
-                      setModelTouched(false);
                     }}
                     title={option.name}
                     icon={<ProviderLogo provider={option.provider} />}
@@ -196,10 +197,7 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
                 <select
                   id="active-config-model"
                   value={model}
-                  onChange={(event) => {
-                    setModel(event.target.value);
-                    setModelTouched(true);
-                  }}
+                  onChange={(event) => setModel(event.target.value)}
                   className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
                 >
                   <option value="" disabled>
@@ -216,7 +214,7 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={!modelTouched || model.trim().length === 0}
+                  disabled={!modelChanged}
                   loading={updateRepoConfig.isPending}
                   onClick={handleSaveModel}
                 >
