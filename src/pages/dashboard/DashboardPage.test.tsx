@@ -198,6 +198,26 @@ describe("DashboardPage", () => {
       expect(screen.getByLabelText("Modelo")).toHaveValue("gemini-2.5-flash");
     });
 
+    it("keeps 'Salvar modelo' disabled until the selection actually differs from the active model", async () => {
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await screen.findByText("gemini-2.5-flash");
+      await user.click(screen.getByRole("button", { name: /Configuração ativa/ }));
+      await user.click(screen.getByRole("button", { name: "Editar modelo" }));
+
+      // Pré-preenchido com o modelo ativo — nada mudou ainda.
+      expect(screen.getByRole("button", { name: "Salvar modelo" })).toBeDisabled();
+
+      await user.selectOptions(screen.getByLabelText("Modelo"), "gemini-2.5-pro");
+      expect(screen.getByRole("button", { name: "Salvar modelo" })).toBeEnabled();
+
+      // Reconsiderar e voltar pro modelo já ativo: nada de fato mudou, então
+      // "Salvar modelo" volta a ficar desabilitado em vez de permitir um
+      // PATCH redundante com o mesmo valor de antes.
+      await user.selectOptions(screen.getByLabelText("Modelo"), "gemini-2.5-flash");
+      expect(screen.getByRole("button", { name: "Salvar modelo" })).toBeDisabled();
+    });
+
     it("keeps a stale model (no longer in the catalog) selectable instead of showing the dropdown blank", async () => {
       // Simulates a repo configured before a catalog update — its saved
       // model isn't one of the current suggestions for its provider.
