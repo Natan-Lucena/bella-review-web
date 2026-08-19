@@ -24,8 +24,11 @@ export const LLM_PROVIDER_CATALOG: Record<LlmProvider, LlmProviderCatalogEntry> 
     provider: "gemini",
     name: "Gemini",
     logo: geminiLogo,
-    modelSuggestions: ["gemini-2.5-flash", "gemini-2.5-pro"],
-    modelPlaceholder: "gemini-2.5-flash",
+    // Só modelos GA (sem "-preview") — o tier Pro da geração 3.x (gemini-3.1-pro-preview)
+    // ainda não tem sucessor estável do 2.5 Pro, então continua fora da lista até sair
+    // do preview. Verificado em ai.google.dev/gemini-api/docs/models em 2026-08-18.
+    modelSuggestions: ["gemini-3.7-flash", "gemini-2.5-pro", "gemini-2.5-flash"],
+    modelPlaceholder: "gemini-3.7-flash",
     apiKeyLabel: "Chave da API do Gemini",
     apiKeyPlaceholder: "cole sua chave de API do Gemini",
     helpLink: {
@@ -37,8 +40,10 @@ export const LLM_PROVIDER_CATALOG: Record<LlmProvider, LlmProviderCatalogEntry> 
     provider: "claude",
     name: "Claude",
     logo: claudeLogo,
-    modelSuggestions: ["claude-sonnet-4-5", "claude-opus-4-1", "claude-haiku-4-5"],
-    modelPlaceholder: "claude-sonnet-4-5",
+    // Verificado em platform.claude.com/docs/en/about-claude/models/overview em
+    // 2026-08-18 — geração atual (não a lista "Legacy models" do mesmo catálogo).
+    modelSuggestions: ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5"],
+    modelPlaceholder: "claude-sonnet-5",
     apiKeyLabel: "Chave da API da Anthropic",
     apiKeyPlaceholder: "cole sua chave de API da Anthropic",
     helpLink: {
@@ -50,8 +55,10 @@ export const LLM_PROVIDER_CATALOG: Record<LlmProvider, LlmProviderCatalogEntry> 
     provider: "openai",
     name: "GPT",
     logo: openaiLogo,
-    modelSuggestions: ["gpt-5", "gpt-5-mini", "gpt-4o"],
-    modelPlaceholder: "gpt-5",
+    // Verificado em developers.openai.com/api/docs/models em 2026-08-18 — "gpt-5.6"
+    // é o alias curto de "gpt-5.6-sol", mesmo padrão de nome curto que "gpt-5" usava.
+    modelSuggestions: ["gpt-5.6", "gpt-5.6-terra", "gpt-5.6-luna"],
+    modelPlaceholder: "gpt-5.6",
     apiKeyLabel: "Chave da API da OpenAI",
     apiKeyPlaceholder: "cole sua chave de API da OpenAI",
     helpLink: {

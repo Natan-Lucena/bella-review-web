@@ -27,7 +27,7 @@ describe("ReviewParamsSection", () => {
     await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
 
     expect(screen.getByLabelText("Modelo")).toHaveValue("");
-    expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "gemini-2.5-flash");
+    expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "gemini-3.7-flash");
     expect(screen.getByLabelText("Limite de tokens por execução")).toHaveValue(null);
   });
 
@@ -36,7 +36,7 @@ describe("ReviewParamsSection", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
 
-    expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "claude-sonnet-4-5");
+    expect(screen.getByLabelText("Modelo")).toHaveAttribute("placeholder", "claude-sonnet-5");
   });
 
   it("sends only the fields the user actually touched (real partial patch)", async () => {

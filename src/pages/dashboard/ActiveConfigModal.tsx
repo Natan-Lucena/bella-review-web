@@ -143,7 +143,14 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
                   <SelectableCard
                     key={option.provider}
                     selected={selectedProvider === option.provider}
-                    onSelect={() => setSelectedProvider(option.provider)}
+                    onSelect={() => {
+                      setSelectedProvider(option.provider);
+                      // O provedor mudou — a lista de modelos do dropdown é
+                      // outra agora, então qualquer seleção anterior deixa de
+                      // fazer sentido.
+                      setModel("");
+                      setModelTouched(false);
+                    }}
                     title={option.name}
                     icon={<ProviderLogo provider={option.provider} />}
                   />
@@ -172,22 +179,24 @@ function ActiveConfigDialog({ onClose, repoId, currentProvider, currentModel }: 
 
             <div className="flex flex-col gap-4 border-t border-surface-border pt-4">
               <FormField label="Modelo" htmlFor="active-config-model">
-                <input
+                <select
                   id="active-config-model"
-                  list="active-config-model-options"
                   value={model}
                   onChange={(event) => {
                     setModel(event.target.value);
                     setModelTouched(true);
                   }}
-                  placeholder={catalogEntry.modelPlaceholder}
                   className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
-                />
-                <datalist id="active-config-model-options">
+                >
+                  <option value="" disabled>
+                    Selecione um modelo
+                  </option>
                   {catalogEntry.modelSuggestions.map((suggestion) => (
-                    <option key={suggestion} value={suggestion} />
+                    <option key={suggestion} value={suggestion}>
+                      {suggestion}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </FormField>
               <div>
                 <Button

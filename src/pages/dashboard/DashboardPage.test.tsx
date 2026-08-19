@@ -142,18 +142,23 @@ describe("DashboardPage", () => {
 
       // Default model for the new provider, from the catalog — this repo's
       // saved model wasn't touched, only the provider/key were. Saving
-      // returns the modal to read-only mode showing it.
+      // returns the modal to read-only mode showing it. `selector: "p"`
+      // targets the read-only view's text specifically — the edit-mode
+      // dropdown, unlike the old free-text datalist, has real <option> text
+      // nodes (e.g. "claude-sonnet-5" is one of Claude's own suggestions),
+      // so an unscoped findByText can match those before the save round-trip
+      // (and its dashboard refetch) actually finishes.
       const dialog = screen.getByRole("dialog");
-      await within(dialog).findByText("claude-sonnet-4-5");
+      await within(dialog).findByText("claude-sonnet-5", { selector: "p" });
       expect(dialog).toHaveTextContent("Claude");
 
       // Closing the modal reveals the chip underneath, already updated —
       // no manual invalidation needed, same hierarchical query-key
       // mechanism the rest of the app already relies on.
       await user.click(screen.getByRole("button", { name: "Fechar" }));
-      expect(screen.getByRole("button", { name: /Configuração ativa/ })).toHaveTextContent(
-        "claude-sonnet-4-5",
-      );
+      expect(
+        await screen.findByRole("button", { name: /claude-sonnet-5/ }),
+      ).toBeInTheDocument();
     });
 
     it("switching only the model doesn't require filling the API key field", async () => {
@@ -164,10 +169,25 @@ describe("DashboardPage", () => {
       await user.click(screen.getByRole("button", { name: "Editar modelo" }));
 
       expect(screen.getByLabelText("Chave da API do Gemini")).toHaveValue("");
-      await user.type(screen.getByLabelText("Modelo"), "gemini-2.5-pro");
+      await user.selectOptions(screen.getByLabelText("Modelo"), "gemini-2.5-pro");
       await user.click(screen.getByRole("button", { name: "Salvar modelo" }));
 
-      await within(screen.getByRole("dialog")).findByText("gemini-2.5-pro");
+      // `selector: "p"` — see the analogous comment above; "gemini-2.5-pro"
+      // is also one of Gemini's own dropdown options.
+      await within(screen.getByRole("dialog")).findByText("gemini-2.5-pro", { selector: "p" });
+    });
+
+    it("offers only the current provider's catalog models in the dropdown, not free text", async () => {
+      renderDashboard("repo-bella-api");
+      const user = userEvent.setup();
+      await screen.findByText("gemini-2.5-flash");
+      await user.click(screen.getByRole("button", { name: /Configuração ativa/ }));
+      await user.click(screen.getByRole("button", { name: "Editar modelo" }));
+
+      const modelSelect = screen.getByLabelText("Modelo") as HTMLSelectElement;
+      expect(modelSelect.tagName).toBe("SELECT");
+      const optionValues = Array.from(modelSelect.options).map((option) => option.value);
+      expect(optionValues).toEqual(["", "gemini-3.7-flash", "gemini-2.5-pro", "gemini-2.5-flash"]);
     });
 
     it("keeps 'Salvar provedor e chave' disabled until a key is typed", async () => {
