@@ -112,12 +112,20 @@ function PromptFormDialog({ onClose, initialPrompt }: DialogProps) {
         </div>
 
         <div className="mt-5 flex flex-col gap-4">
-          <FormField label="Nome" htmlFor="prompt-form-name">
+          <FormField
+            label="Nome"
+            htmlFor="prompt-form-name"
+            error={errorMessage === DUPLICATE_NAME_ERROR ? errorMessage : undefined}
+          >
             <input
               id="prompt-form-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Ex.: Security-first review"
+              aria-invalid={errorMessage === DUPLICATE_NAME_ERROR ? true : undefined}
+              aria-describedby={
+                errorMessage === DUPLICATE_NAME_ERROR ? "prompt-form-name-error" : undefined
+              }
               className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] text-[15px] text-ink"
             />
           </FormField>
@@ -130,7 +138,7 @@ function PromptFormDialog({ onClose, initialPrompt }: DialogProps) {
             placeholder="Instruções que o Bella deve seguir ao revisar este repositório..."
           />
 
-          {errorMessage && (
+          {errorMessage && errorMessage !== DUPLICATE_NAME_ERROR && (
             <p role="alert" className="text-[13.5px] text-severity-critical">
               {errorMessage}
             </p>
