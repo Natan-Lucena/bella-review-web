@@ -25,8 +25,13 @@ export function useRepo(repoId: string) {
 }
 
 // Todas as mutations de repositório invalidam ["repos"] inteiro ao suceder —
-// a Fase 1 não tem granularidade fina (a Fase 2 pode refinar).
-function useInvalidateRepos() {
+// a Fase 1 não tem granularidade fina (a Fase 2 pode refinar). Exportado
+// porque data/prompts.ts também precisa dele — apagar um prompt muda
+// RepoConfig.promptId no backend sem passar por nenhuma mutation de
+// repositório (é o onDelete: SetNull do Postgres, não um updateRepoConfig
+// no cliente), então esse invalidate precisa ser disparado explicitamente
+// de fora deste módulo nesse caso específico.
+export function useInvalidateRepos() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: queryKeys.repos() });
 }

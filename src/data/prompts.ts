@@ -2,16 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { UpdatePromptInput } from "../types/prompt";
 import { apiClient } from "./api-client";
+import { useInvalidateRepos } from "./repos";
 import { queryKeys } from "./query-keys";
 
+const STALE_TIME_MS = 60_000;
+
 export function usePrompts() {
-  return useQuery({ queryKey: queryKeys.prompts(), queryFn: () => apiClient.listPrompts() });
+  return useQuery({
+    queryKey: queryKeys.prompts(),
+    queryFn: () => apiClient.listPrompts(),
+    staleTime: STALE_TIME_MS,
+  });
 }
 
-// Deletar/atualizar um prompt não invalida ["repos"] — a lista de
-// repositórios não muda por causa disso (só promptId de algum RepoConfig
-// pode mudar, no caso do delete, e a tela de Configurações já revalida via a
-// própria mutation de updateRepoConfig). Ver PRD 19, seção 5.
 function useInvalidatePrompts() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: queryKeys.prompts() });
@@ -31,6 +34,17 @@ export function useUpdatePrompt(id: string) {
 }
 
 export function useDeletePrompt() {
-  const invalidate = useInvalidatePrompts();
-  return useMutation({ mutationFn: apiClient.deletePrompt, onSuccess: invalidate });
+  const invalidatePrompts = useInvalidatePrompts();
+  const invalidateRepos = useInvalidateRepos();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.deletePrompt(id),
+    // Único dos três que também precisa invalidar ["repos"]: apagar um
+    // prompt aciona o onDelete: SetNull do Postgres direto no backend, sem
+    // nenhuma mutation de repositório no meio — diferente de
+    // create/update, nada mais revalida esse cache por conta própria.
+    onSuccess: () => {
+      invalidatePrompts();
+      invalidateRepos();
+    },
+  });
 }

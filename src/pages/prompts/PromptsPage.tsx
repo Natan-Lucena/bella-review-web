@@ -6,6 +6,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 import { usePrompts } from "../../data/prompts";
+import { useRepos } from "../../data/repos";
 import type { Prompt } from "../../types/prompt";
 import { DeletePromptModal } from "./DeletePromptModal";
 import { PromptFormModal } from "./PromptFormModal";
@@ -21,6 +22,11 @@ const CARD_HEIGHT = "5.75rem";
 export function PromptsPage() {
   const { data, isPending, isError, refetch } = usePrompts();
   const prompts = data?.prompts ?? [];
+  // Não usado nesta página — só aquece o cache ["repos"] (mesma chave que
+  // Configurações e o DeletePromptModal já usam, staleTime de 60s) antes do
+  // usuário clicar em "Excluir", pra reduzir a janela em que esse modal abre
+  // com a lista de repositórios ainda em voo.
+  useRepos();
   const showEmpty = !isPending && !isError && prompts.length === 0;
   const showList = !isPending && !isError && prompts.length > 0;
 

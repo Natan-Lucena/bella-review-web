@@ -48,7 +48,7 @@ export function ReviewParamsSection({
   currentPromptId,
 }: ReviewParamsSectionProps) {
   const catalogEntry = LLM_PROVIDER_CATALOG[currentProvider];
-  const { data: promptsData } = usePrompts();
+  const { data: promptsData, isPending: promptsPending } = usePrompts();
   const prompts = promptsData?.prompts ?? [];
   const [model, setModel] = useState("");
   const [modelTouched, setModelTouched] = useState(false);
@@ -177,13 +177,19 @@ export function ReviewParamsSection({
           <select
             id="settings-prompt"
             value={promptSelection}
+            disabled={promptsPending}
             onChange={(event) => {
               setPromptSelection(event.target.value);
               setPromptTouched(true);
               setSaved(false);
             }}
-            className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
+            className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink disabled:opacity-60"
           >
+            {/* Desabilitado enquanto usePrompts() ainda não resolveu — mesmo
+                com staleTime (fica warm depois), a primeira busca de verdade
+                nesta sessão ainda é assíncrona; um <select> controlado com
+                um value que ainda não tem <option> correspondente pode
+                mostrar um valor diferente do que o estado interno guarda. */}
             <option value="">Bella Default Skill</option>
             {prompts.map((prompt) => (
               <option key={prompt.id} value={prompt.id}>
