@@ -38,8 +38,14 @@ function DeletePromptDialog({ prompt, onClose, onDeleted }: DeletePromptDialogPr
 
   // affectedRepos: calculado client-side filtrando useRepos() por
   // promptId === prompt.id, sem endpoint dedicado "quem usa este prompt" —
-  // ver PRD 19, seção 4.
-  const { data: reposData } = useRepos();
+  // ver PRD 19, seção 4. `reposPending`/`reposError` importam tanto quanto o
+  // resultado em si: `reposData` também é `undefined` enquanto a busca está
+  // em voo ou se ela falhar, e `undefined ?? []` colapsa pra "zero
+  // repositórios afetados" — mostrar essa mensagem (com o botão Excluir
+  // liberado) antes da resposta real chegar apagaria o prompt sem o usuário
+  // nunca ter visto quais repositórios seriam afetados, o oposto do que este
+  // modal existe pra garantir.
+  const { data: reposData, isPending: reposPending, isError: reposError } = useRepos();
   const affectedRepos = (reposData?.repos ?? []).filter((repo) => repo.promptId === prompt.id);
 
   const deletePrompt = useDeletePrompt();
@@ -88,7 +94,17 @@ function DeletePromptDialog({ prompt, onClose, onDeleted }: DeletePromptDialogPr
           Excluir prompt
         </h2>
 
-        {affectedRepos.length === 0 ? (
+        {reposPending ? (
+          <p className="mt-3 text-sm text-ink-muted">
+            Verificando quais repositórios usam <strong className="text-ink">{prompt.name}</strong>…
+          </p>
+        ) : reposError ? (
+          <p className="mt-3 text-sm text-ink-muted">
+            Não foi possível verificar quais repositórios usam{" "}
+            <strong className="text-ink">{prompt.name}</strong>. Qualquer repositório que o use hoje
+            voltará para o Bella Default Skill se você apagar.
+          </p>
+        ) : affectedRepos.length === 0 ? (
           <p className="mt-3 text-sm text-ink-muted">
             Tem certeza que quer apagar o prompt <strong className="text-ink">{prompt.name}</strong>
             ? Essa ação não pode ser desfeita.
@@ -117,7 +133,12 @@ function DeletePromptDialog({ prompt, onClose, onDeleted }: DeletePromptDialogPr
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button variant="primary" loading={deletePrompt.isPending} onClick={handleDelete}>
+          <Button
+            variant="primary"
+            disabled={reposPending}
+            loading={deletePrompt.isPending}
+            onClick={handleDelete}
+          >
             Excluir
           </Button>
         </div>
