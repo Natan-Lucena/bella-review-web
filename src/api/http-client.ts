@@ -9,7 +9,7 @@ import { ApiError } from "../lib/api-error";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number | undefined>;
 };
