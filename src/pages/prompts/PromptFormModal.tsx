@@ -31,6 +31,11 @@ type DialogProps = Omit<PromptFormModalProps, "open">;
 
 const GENERIC_ERROR = "Não foi possível salvar agora. Tente novamente.";
 const DUPLICATE_NAME_ERROR = "Você já tem um prompt com esse nome.";
+// Mirrors create-prompt-schema.ts / update-prompt-schema.ts on the backend —
+// enforced here too (native maxLength) so a paste that would overflow gets
+// truncated with a visible counter instead of failing silently at save time.
+const MAX_NAME_LENGTH = 100;
+const MAX_CONTENT_LENGTH = 40_000;
 
 function PromptFormDialog({ onClose, initialPrompt }: DialogProps) {
   const isEdit = initialPrompt !== undefined;
@@ -122,6 +127,7 @@ function PromptFormDialog({ onClose, initialPrompt }: DialogProps) {
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Ex.: Security-first review"
+              maxLength={MAX_NAME_LENGTH}
               aria-invalid={errorMessage === DUPLICATE_NAME_ERROR ? true : undefined}
               aria-describedby={
                 errorMessage === DUPLICATE_NAME_ERROR ? "prompt-form-name-error" : undefined
@@ -136,6 +142,7 @@ function PromptFormDialog({ onClose, initialPrompt }: DialogProps) {
             value={content}
             onChange={setContent}
             placeholder="Instruções que o Bella deve seguir ao revisar este repositório..."
+            maxLength={MAX_CONTENT_LENGTH}
           />
 
           {errorMessage && errorMessage !== DUPLICATE_NAME_ERROR && (
