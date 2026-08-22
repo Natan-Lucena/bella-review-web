@@ -181,7 +181,10 @@ describe("App journeys", () => {
 
     // Parâmetros de review — Accordion começa fechado, precisa abrir.
     await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
-    const temperatureSlider = await screen.findByLabelText(/Temperatura/);
+    // getByRole("slider", ...), não getByLabelText — "Temperatura" agora
+    // também aparece no aria-label do botão de tooltip ao lado do campo (ver
+    // Tooltip.tsx), então uma busca por texto de label bateria nos dois.
+    const temperatureSlider = await screen.findByRole("slider", { name: "Temperatura" });
     fireEvent.change(temperatureSlider, { target: { value: "1.2" } });
     await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
     expect(await screen.findByText("Parâmetros salvos.")).toBeInTheDocument();

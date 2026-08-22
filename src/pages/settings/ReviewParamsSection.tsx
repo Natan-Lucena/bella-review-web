@@ -4,6 +4,7 @@ import { Accordion } from "../../components/Accordion";
 import { Button } from "../../components/Button";
 import { FormField } from "../../components/FormField";
 import { TagInput } from "../../components/TagInput";
+import { Tooltip } from "../../components/Tooltip";
 import { usePrompts } from "../../data/prompts";
 import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import type { LlmProvider } from "../../types/llm-provider";
@@ -179,15 +180,18 @@ export function ReviewParamsSection({
         </div>
 
         <div>
-          <label
-            htmlFor="settings-temperature"
-            className="mb-3 flex max-w-[420px] justify-between text-[13.5px] text-ink-muted"
-          >
-            Temperatura{" "}
+          <div className="mb-3 flex max-w-[420px] items-center justify-between text-[13.5px] text-ink-muted">
+            <span className="flex items-center gap-1.5">
+              <label htmlFor="settings-temperature">Temperatura</label>
+              <Tooltip
+                label="Temperatura"
+                content="Controla a aleatoriedade das respostas do modelo: valores baixos (perto de 0) deixam o review mais determinístico e conservador; valores altos (perto de 2) deixam as respostas mais variadas e criativas, mas menos previsíveis."
+              />
+            </span>
             <span className="font-mono text-ink">
               {temperatureTouched ? temperature : "não alterada"}
             </span>
-          </label>
+          </div>
           <input
             id="settings-temperature"
             type="range"
