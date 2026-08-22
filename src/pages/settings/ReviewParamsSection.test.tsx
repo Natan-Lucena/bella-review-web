@@ -6,12 +6,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as apiClient from "../../mocks/api-client";
 import { resetMockData } from "../../mocks/api-client";
 import type { LlmProvider } from "../../types/llm-provider";
+import type { ReviewLanguage } from "../../types/review-language";
 import { ReviewParamsSection } from "./ReviewParamsSection";
 
 function renderOpen(
   onSave = vi.fn().mockResolvedValue(undefined),
   currentProvider: LlmProvider = "gemini",
   currentPromptId: string | null = null,
+  currentReviewLanguage: ReviewLanguage = "en",
 ) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const utils = render(
@@ -21,6 +23,7 @@ function renderOpen(
         onSave={onSave}
         currentProvider={currentProvider}
         currentPromptId={currentPromptId}
+        currentReviewLanguage={currentReviewLanguage}
       />
     </QueryClientProvider>,
   );
@@ -58,7 +61,9 @@ describe("ReviewParamsSection", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
 
-    expect(await screen.findByRole("option", { name: "Security-first review" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("option", { name: "Security-first review" }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Prompt de review")).toHaveValue("prompt-security-focus");
     // Confirms the asymmetry explicitly: model/tokenLimit stay blank even
     // though this same render call also has a real prompt pre-selected.
@@ -132,7 +137,11 @@ describe("ReviewParamsSection", () => {
   });
 
   it("selecting 'Bella Default Skill' after a prompt was already selected sends promptId: null, not an absent key", async () => {
-    const { onSave } = renderOpen(vi.fn().mockResolvedValue(undefined), "gemini", "prompt-security-focus");
+    const { onSave } = renderOpen(
+      vi.fn().mockResolvedValue(undefined),
+      "gemini",
+      "prompt-security-focus",
+    );
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
 
@@ -157,6 +166,7 @@ describe("ReviewParamsSection", () => {
           onSave={vi.fn().mockResolvedValue(undefined)}
           currentProvider="gemini"
           currentPromptId={null}
+          currentReviewLanguage="en"
         />
       </QueryClientProvider>,
     );
@@ -171,6 +181,7 @@ describe("ReviewParamsSection", () => {
           onSave={vi.fn().mockResolvedValue(undefined)}
           currentProvider="gemini"
           currentPromptId="prompt-security-focus"
+          currentReviewLanguage="en"
         />
       </QueryClientProvider>,
     );
@@ -191,5 +202,38 @@ describe("ReviewParamsSection", () => {
     expect(onSave).toHaveBeenCalledWith({ model: "gemini-2.5-pro" });
     const [patch] = onSave.mock.calls[0] as [Record<string, unknown>];
     expect(patch).not.toHaveProperty("promptId");
+  });
+
+  it("unlike model/tokenLimit, the review language select starts pre-filled with currentReviewLanguage, not 'Inglês' by default", async () => {
+    renderOpen(vi.fn(), "gemini", null, "pt");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    expect(screen.getByLabelText("Idioma dos comentários")).toHaveValue("pt");
+  });
+
+  it("changing the language and saving includes reviewLanguage in the patch", async () => {
+    const { onSave } = renderOpen(vi.fn().mockResolvedValue(undefined), "gemini", null, "en");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    await user.selectOptions(screen.getByLabelText("Idioma dos comentários"), "es");
+    await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
+
+    expect(onSave).toHaveBeenCalledWith({ reviewLanguage: "es" });
+  });
+
+  it("not touching the review language select at all does not include reviewLanguage in the patch", async () => {
+    const { onSave } = renderOpen();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    const modelInput = screen.getByLabelText("Modelo");
+    await user.type(modelInput, "gemini-2.5-pro");
+    await user.click(screen.getByRole("button", { name: "Salvar parâmetros" }));
+
+    expect(onSave).toHaveBeenCalledWith({ model: "gemini-2.5-pro" });
+    const [patch] = onSave.mock.calls[0] as [Record<string, unknown>];
+    expect(patch).not.toHaveProperty("reviewLanguage");
   });
 });

@@ -148,6 +148,7 @@ function toRepo(record: RepoRecord): Repo {
     llmProvider: record.config.llmProvider,
     model: record.llmCredential ? record.config.model : "",
     promptId: record.config.promptId,
+    reviewLanguage: record.config.reviewLanguage,
   };
 }
 
@@ -266,6 +267,7 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
       temperature: 0.2,
       enabledCategories: [],
       promptId: null,
+      reviewLanguage: "en",
     },
     dashboardUsageByPeriod: { "7d": emptyUsage(), "30d": emptyUsage(), "90d": emptyUsage() },
     acceptanceMetricsByPeriod: {

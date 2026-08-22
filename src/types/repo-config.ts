@@ -1,4 +1,5 @@
 import type { LlmProvider } from "./llm-provider";
+import type { ReviewLanguage } from "./review-language";
 
 export type RepoConfig = {
   llmProvider: LlmProvider;
@@ -7,6 +8,7 @@ export type RepoConfig = {
   temperature: number;
   enabledCategories: string[];
   promptId: string | null;
+  reviewLanguage: ReviewLanguage;
 };
 
 // PATCH /repos/:id/config aceita um patch parcial de verdade — só os campos
