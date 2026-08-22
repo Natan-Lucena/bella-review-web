@@ -56,6 +56,18 @@ describe("ReviewParamsSection", () => {
     expect(screen.getByLabelText("Prompt de review")).toHaveValue("");
   });
 
+  it("reveals an explanation of what temperature does on hover", async () => {
+    renderOpen();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Parâmetros de review" }));
+
+    const trigger = screen.getByRole("button", { name: "Mais informações sobre Temperatura" });
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+
+    await user.hover(trigger);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/aleatoriedade das respostas/);
+  });
+
   it("unlike model/tokenLimit (blind, no read endpoint), the prompt select starts pre-filled with currentPromptId, since promptId IS exposed by GET /repos", async () => {
     renderOpen(vi.fn(), "gemini", "prompt-security-focus");
     const user = userEvent.setup();
