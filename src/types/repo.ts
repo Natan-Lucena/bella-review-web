@@ -1,4 +1,5 @@
 import type { LlmProvider } from "./llm-provider";
+import type { ReviewLanguage } from "./review-language";
 
 export type ServiceState = "active" | "configuration_pending" | "inactive";
 
@@ -14,6 +15,7 @@ export type Repo = {
   llmProvider: LlmProvider;
   model: string;
   promptId: string | null;
+  reviewLanguage: ReviewLanguage;
 };
 
 export type ListReposResponse = {

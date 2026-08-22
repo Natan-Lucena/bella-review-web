@@ -334,6 +334,7 @@ const bellaApi: RepoRecord = {
     temperature: 0.2,
     enabledCategories: ["security", "performance"],
     promptId: null,
+    reviewLanguage: "en",
   },
   dashboardUsageByPeriod: {
     "7d": {
@@ -418,6 +419,7 @@ const bellaWeb: RepoRecord = {
     temperature: 0.2,
     enabledCategories: [],
     promptId: null,
+    reviewLanguage: "en",
   },
   dashboardUsageByPeriod: {
     "7d": {
@@ -527,6 +529,7 @@ const bellaAction: RepoRecord = {
     temperature: 0.2,
     enabledCategories: [],
     promptId: null,
+    reviewLanguage: "en",
   },
   dashboardUsageByPeriod: {
     "7d": {

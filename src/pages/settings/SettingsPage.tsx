@@ -116,6 +116,7 @@ export function SettingsPage() {
         onSave={(patch) => updateRepoConfig.mutateAsync(patch)}
         currentProvider={currentProvider}
         currentPromptId={repo?.promptId ?? null}
+        currentReviewLanguage={repo?.reviewLanguage ?? "en"}
       />
 
       {modal && (

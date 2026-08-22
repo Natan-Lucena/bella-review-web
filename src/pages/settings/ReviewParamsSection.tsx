@@ -8,12 +8,18 @@ import { usePrompts } from "../../data/prompts";
 import { LLM_PROVIDER_CATALOG } from "../../lib/llm-provider-catalog";
 import type { LlmProvider } from "../../types/llm-provider";
 import type { RepoConfigPatch } from "../../types/repo-config";
+import { REVIEW_LANGUAGE_LABELS } from "../../types/review-language";
+import type { ReviewLanguage } from "../../types/review-language";
 
 const CATEGORY_SUGGESTIONS = ["security", "performance", "correctness", "error-handling"];
 const TOKEN_LIMIT_PLACEHOLDER = "100000";
 // Valor neutro só pra o slider ter uma posição inicial — não é enviado
 // a menos que o usuário efetivamente mexa nele (ver `temperatureTouched`).
 const TEMPERATURE_NEUTRAL = 1;
+const REVIEW_LANGUAGE_OPTIONS = Object.entries(REVIEW_LANGUAGE_LABELS) as [
+  ReviewLanguage,
+  string,
+][];
 
 type ReviewParamsSectionProps = {
   isPending: boolean;
@@ -28,6 +34,11 @@ type ReviewParamsSectionProps = {
   // exposto por GET /repos, então o seletor nasce pré-preenchido com o valor
   // real em vez de vazio/neutro. Ver PRD 19, seção 6, "Motivação e contexto".
   currentPromptId: string | null;
+  // reviewLanguage conhecido do repositório (repo?.reviewLanguage,
+  // useRepo(repoId) em SettingsPage) — mesma exceção de currentPromptId: É
+  // exposto por GET /repos, então o seletor nasce pré-preenchido com o valor
+  // real. Ver PRD 20, seção 3.
+  currentReviewLanguage: ReviewLanguage;
 };
 
 // Bloco 6.4 — Parâmetros de review. Deliberadamente fora do wizard (os
@@ -46,6 +57,7 @@ export function ReviewParamsSection({
   onSave,
   currentProvider,
   currentPromptId,
+  currentReviewLanguage,
 }: ReviewParamsSectionProps) {
   const catalogEntry = LLM_PROVIDER_CATALOG[currentProvider];
   const { data: promptsData, isPending: promptsPending } = usePrompts();
@@ -63,6 +75,11 @@ export function ReviewParamsSection({
   // PRD 19, seção 6.
   const [promptSelection, setPromptSelection] = useState(currentPromptId ?? "");
   const [promptTouched, setPromptTouched] = useState(false);
+  // Mesma exceção de promptId — reviewLanguage É exposto por GET /repos,
+  // então nasce pré-preenchido com o valor real. Ver PRD 20, seção 3.
+  const [reviewLanguageSelection, setReviewLanguageSelection] =
+    useState<ReviewLanguage>(currentReviewLanguage);
+  const [reviewLanguageTouched, setReviewLanguageTouched] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // `useState(currentPromptId ?? "")` só captura o valor no mount — em
@@ -82,6 +99,17 @@ export function ReviewParamsSection({
     }
   }
 
+  // Mesmo padrão de ajuste durante a renderização usado acima para
+  // promptId — currentReviewLanguage também chega assíncrono (useRepo(repoId)
+  // ainda não resolveu no mount). Ver PRD 20, seção 3.
+  const [lastSeenReviewLanguage, setLastSeenReviewLanguage] = useState(currentReviewLanguage);
+  if (currentReviewLanguage !== lastSeenReviewLanguage) {
+    setLastSeenReviewLanguage(currentReviewLanguage);
+    if (!reviewLanguageTouched) {
+      setReviewLanguageSelection(currentReviewLanguage);
+    }
+  }
+
   async function handleSave() {
     const patch: RepoConfigPatch = {};
     if (modelTouched && model.trim().length > 0) {
@@ -98,6 +126,9 @@ export function ReviewParamsSection({
     }
     if (promptTouched) {
       patch.promptId = promptSelection === "" ? null : promptSelection;
+    }
+    if (reviewLanguageTouched) {
+      patch.reviewLanguage = reviewLanguageSelection;
     }
     if (Object.keys(patch).length === 0) {
       return;
@@ -194,6 +225,25 @@ export function ReviewParamsSection({
             {prompts.map((prompt) => (
               <option key={prompt.id} value={prompt.id}>
                 {prompt.name}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField label="Idioma dos comentários" htmlFor="settings-review-language">
+          <select
+            id="settings-review-language"
+            value={reviewLanguageSelection}
+            onChange={(event) => {
+              setReviewLanguageSelection(event.target.value as ReviewLanguage);
+              setReviewLanguageTouched(true);
+              setSaved(false);
+            }}
+            className="w-full rounded-[12px] border border-surface-border bg-background px-[15px] py-[13px] font-mono text-[15px] text-ink"
+          >
+            {REVIEW_LANGUAGE_OPTIONS.map(([code, label]) => (
+              <option key={code} value={code}>
+                {label}
               </option>
             ))}
           </select>
