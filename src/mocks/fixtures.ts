@@ -321,6 +321,13 @@ const bellaApiAcceptanceMetrics: Record<DashboardPeriod, AcceptanceMetrics> = {
 // futuro gráfico (ver PRD 22, "Fixtures"). previousPeriod difere do total
 // atual em todos os períodos (uma alta, uma queda), pra dar dado real a uma
 // eventual UI de variação percentual.
+//
+// byModel: bella-api trocou de modelo há pouco — claude-sonnet-5 entrou em
+// uso há ~2 dias, então seu totalCost/count são os mesmos nos três períodos
+// (toda a janela de uso dele cabe dentro de 7d/30d/90d), enquanto
+// gemini-2.5-flash (modelo configurado desde sempre, ver `config.model`
+// abaixo) cresce com a janela — exercita o gráfico por modelo da PRD 23 com
+// dois modelos de verdade, não só um placeholder.
 const bellaApiCostStats: Record<DashboardPeriod, CostStats> = {
   "7d": {
     totalCost: 12.45,
@@ -334,6 +341,24 @@ const bellaApiCostStats: Record<DashboardPeriod, CostStats> = {
       { category: "correctness", runType: "review", totalCost: 2.5, count: 7 },
       { category: "security", runType: "comment_reply", totalCost: 1.5, count: 4 },
       { category: "performance", runType: "comment_reply", totalCost: 1.15, count: 3 },
+    ],
+    byModel: [
+      {
+        provider: "gemini",
+        model: "gemini-2.5-flash",
+        totalCost: 9.85,
+        count: 20,
+        firstUsedAt: isoOffset(6, 20),
+        lastUsedAt: isoOffset(0, 2),
+      },
+      {
+        provider: "claude",
+        model: "claude-sonnet-5",
+        totalCost: 2.6,
+        count: 5,
+        firstUsedAt: isoOffset(2, 0),
+        lastUsedAt: isoOffset(0, 1),
+      },
     ],
     previousPeriod: { totalCost: 10.9 },
   },
@@ -350,6 +375,24 @@ const bellaApiCostStats: Record<DashboardPeriod, CostStats> = {
       { category: "security", runType: "comment_reply", totalCost: 5.6, count: 14 },
       { category: "performance", runType: "comment_reply", totalCost: 4.25, count: 12 },
     ],
+    byModel: [
+      {
+        provider: "gemini",
+        model: "gemini-2.5-flash",
+        totalCost: 46.0,
+        count: 93,
+        firstUsedAt: isoOffset(29, 18),
+        lastUsedAt: isoOffset(0, 2),
+      },
+      {
+        provider: "claude",
+        model: "claude-sonnet-5",
+        totalCost: 2.6,
+        count: 5,
+        firstUsedAt: isoOffset(2, 0),
+        lastUsedAt: isoOffset(0, 1),
+      },
+    ],
     previousPeriod: { totalCost: 41.2 },
   },
   "90d": {
@@ -364,6 +407,24 @@ const bellaApiCostStats: Record<DashboardPeriod, CostStats> = {
       { category: "correctness", runType: "review", totalCost: 30.4, count: 70 },
       { category: "security", runType: "comment_reply", totalCost: 16.2, count: 36 },
       { category: "performance", runType: "comment_reply", totalCost: 12.4, count: 28 },
+    ],
+    byModel: [
+      {
+        provider: "gemini",
+        model: "gemini-2.5-flash",
+        totalCost: 130.3,
+        count: 239,
+        firstUsedAt: isoOffset(88, 10),
+        lastUsedAt: isoOffset(0, 2),
+      },
+      {
+        provider: "claude",
+        model: "claude-sonnet-5",
+        totalCost: 2.6,
+        count: 5,
+        firstUsedAt: isoOffset(2, 0),
+        lastUsedAt: isoOffset(0, 1),
+      },
     ],
     previousPeriod: { totalCost: 145.5 },
   },
@@ -470,6 +531,18 @@ const bellaWebCostStats: CostStats = {
     { category: "correctness", runType: "comment_reply", totalCost: 1.6, count: 3 },
     { category: "correctness", runType: "review", totalCost: 1.2, count: 1 },
     { category: "readability", runType: "comment_reply", totalCost: 1.05, count: 2 },
+  ],
+  // Repositório pequeno, só usou o modelo configurado (config.model abaixo) —
+  // caso de um modelo só, diferente do caso multi-modelo de bella-api acima.
+  byModel: [
+    {
+      provider: "gemini",
+      model: "gemini-2.5-flash",
+      totalCost: 3.85,
+      count: 6,
+      firstUsedAt: isoOffset(2, 0),
+      lastUsedAt: isoOffset(0, 0),
+    },
   ],
   previousPeriod: { totalCost: 0 },
 };
@@ -754,9 +827,27 @@ const bellaAction: RepoRecord = {
   // totalCost 0, mesmo racional de noDecisionsYet() acima para
   // applyRateByCategory/applyRateBySeverity.
   costStatsByPeriod: {
-    "7d": { totalCost: 0, totalCostByRunType: [], breakdown: [], previousPeriod: { totalCost: 0 } },
-    "30d": { totalCost: 0, totalCostByRunType: [], breakdown: [], previousPeriod: { totalCost: 0 } },
-    "90d": { totalCost: 0, totalCostByRunType: [], breakdown: [], previousPeriod: { totalCost: 0 } },
+    "7d": {
+      totalCost: 0,
+      totalCostByRunType: [],
+      breakdown: [],
+      byModel: [],
+      previousPeriod: { totalCost: 0 },
+    },
+    "30d": {
+      totalCost: 0,
+      totalCostByRunType: [],
+      breakdown: [],
+      byModel: [],
+      previousPeriod: { totalCost: 0 },
+    },
+    "90d": {
+      totalCost: 0,
+      totalCostByRunType: [],
+      breakdown: [],
+      byModel: [],
+      previousPeriod: { totalCost: 0 },
+    },
   },
   reviewRuns: [],
   comments: [],
