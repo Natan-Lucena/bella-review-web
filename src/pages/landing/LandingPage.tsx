@@ -20,6 +20,8 @@ const WORKFLOW_YAML = [
   "on:",
   "  pull_request:",
   "    types: [opened, synchronize, reopened]",
+  "  pull_request_review_comment:",
+  "    types: [created]",
   "",
   "jobs:",
   "  bella-review:",
