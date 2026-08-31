@@ -225,6 +225,7 @@ describe("getCostStats", () => {
       totalCost: 0,
       totalCostByRunType: [],
       breakdown: [],
+      byModel: [],
       previousPeriod: { totalCost: 0 },
     });
   });

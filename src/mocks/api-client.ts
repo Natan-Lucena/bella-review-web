@@ -91,6 +91,7 @@ function emptyCostStats(): CostStats {
     totalCost: 0,
     totalCostByRunType: [],
     breakdown: [],
+    byModel: [],
     previousPeriod: { totalCost: 0 },
   };
 }
