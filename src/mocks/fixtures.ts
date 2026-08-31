@@ -248,6 +248,9 @@ const bellaApiComments: Comment[] = Array.from({ length: 24 }, (_, i) => {
     status,
     externalId: status === "published" ? `gh-comment-${index}` : null,
     createdAt: isoOffset(20 - (i % 20), 0),
+    // Nenhum destes tem reply no dataset (commentRepliesByCommentId de
+    // bella-api é {}) — ver PRD 21 F2.
+    replyCount: 0,
   } satisfies Comment;
 });
 
@@ -433,6 +436,41 @@ const bellaWebComment1Replies: CommentReply[] = [
     completedAt: isoOffset(1, 18),
   },
   {
+    id: "reply-bella-web-1-4",
+    humanBody: "Dá pra sugerir o trecho certo pra corrigir isso?",
+    humanAuthor: "marcos.silva",
+    status: "completed",
+    category: "fix",
+    bellaBody:
+      "Segue uma checagem adicional no guard, cobrindo o caso de sessão que expira com a página já aberta.",
+    bellaSuggestedCode:
+      "if (session?.expiresAt && session.expiresAt < Date.now()) {\n  redirectToLogin();\n}",
+    createdAt: isoOffset(1, 14),
+    completedAt: isoOffset(1, 13),
+  },
+  {
+    id: "reply-bella-web-1-5",
+    humanBody: "Aplicado, ficou bom — obrigada!",
+    humanAuthor: "juliana.dev",
+    status: "completed",
+    category: "acknowledgment",
+    bellaBody: "Que bom que ajudou!",
+    bellaSuggestedCode: null,
+    createdAt: isoOffset(1, 8),
+    completedAt: isoOffset(1, 7),
+  },
+  {
+    id: "reply-bella-web-1-6",
+    humanBody: "Só documentando aqui: já sabíamos desse comportamento, não é bug novo.",
+    humanAuthor: "marcos.silva",
+    status: "completed",
+    category: "other",
+    bellaBody: "Entendido, mantendo registrado no histórico do comentário.",
+    bellaSuggestedCode: null,
+    createdAt: isoOffset(1, 2),
+    completedAt: isoOffset(1, 1),
+  },
+  {
     id: "reply-bella-web-1-3",
     humanBody: "Vou aplicar a sugestão, só confirma o snippet certo pra colar aqui.",
     humanAuthor: "juliana.dev",
@@ -441,6 +479,17 @@ const bellaWebComment1Replies: CommentReply[] = [
     bellaBody: null,
     bellaSuggestedCode: null,
     createdAt: isoOffset(0, 1),
+    completedAt: null,
+  },
+  {
+    id: "reply-bella-web-1-7",
+    humanBody: "Ficou faltando revisar o outro branch desse guard também.",
+    humanAuthor: "marcos.silva",
+    status: "processing",
+    category: null,
+    bellaBody: null,
+    bellaSuggestedCode: null,
+    createdAt: isoOffset(0, 0),
     completedAt: null,
   },
 ];
@@ -547,6 +596,9 @@ const bellaWeb: RepoRecord = {
       status: "published",
       externalId: "gh-comment-web-1",
       createdAt: isoOffset(2, 0),
+      // Espelha o tamanho de bellaWebComment1Replies abaixo — único comentário
+      // do dataset com replies de verdade (ver PRD 21 F2).
+      replyCount: bellaWebComment1Replies.length,
     },
     {
       id: "comment-bella-web-2",
@@ -560,6 +612,7 @@ const bellaWeb: RepoRecord = {
       status: "generated",
       externalId: null,
       createdAt: isoOffset(2, 0),
+      replyCount: 0,
     },
   ],
   commentRepliesByCommentId: {

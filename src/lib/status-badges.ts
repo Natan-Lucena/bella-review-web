@@ -1,5 +1,6 @@
 import type { BadgeTone } from "../components/Badge";
 import type { CommentSeverity, CommentStatus } from "../types/comment";
+import type { CommentReplyCategory } from "../types/comment-reply";
 import type { ReviewRunStatus, ReviewRunTrigger } from "../types/review-run";
 import type { ServiceState } from "../types/repo";
 
@@ -86,4 +87,22 @@ const COMMENT_STATUS: Record<CommentStatus, BadgeProps> = {
 
 export function commentStatusBadgeProps(status: CommentStatus): BadgeProps {
   return COMMENT_STATUS[status];
+}
+
+// CommentRow, seção de conversa (PRD 21 F2). "other" não tem badge — é o
+// catch-all de categoria da reply, sem rótulo/emoji específico combinado com
+// produto; `null` (reply ainda sem resposta da Bella) também não chega aqui,
+// filtrado por quem chama antes de precisar de um tom.
+const COMMENT_REPLY_CATEGORY: Record<Exclude<CommentReplyCategory, "other">, BadgeProps> = {
+  fix: { tone: "info", label: "🔧 Fix" },
+  clarification: { tone: "neutral", label: "❓ Dúvida" },
+  disagreement: { tone: "warning", label: "⚠️ Discordância" },
+  acknowledgment: { tone: "success", label: "👍 Confirmação" },
+};
+
+export function commentReplyCategoryBadgeProps(category: CommentReplyCategory): BadgeProps | null {
+  if (category === "other") {
+    return null;
+  }
+  return COMMENT_REPLY_CATEGORY[category];
 }

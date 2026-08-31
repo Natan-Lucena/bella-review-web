@@ -20,6 +20,11 @@ export type Comment = {
   status: CommentStatus;
   externalId: string | null;
   createdAt: string;
+  // Vem de uma contagem batelada no backend (uma query por página de
+  // comentários, não uma por linha) — ver PRD 21 F2. O mock ainda não
+  // implementa essa contagem de verdade; hoje só existe pra alimentar o
+  // badge/toggle de conversa no CommentRow quando > 0.
+  replyCount: number;
 };
 
 export type CommentFilters = {
