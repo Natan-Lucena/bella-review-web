@@ -2,6 +2,7 @@ import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ListCommentRepliesResponse } from "../types/comment-reply";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
+import type { CostStats } from "../types/cost-stats";
 import type { Dashboard, DashboardPeriod } from "../types/dashboard";
 import type { InstallActionResult, ListGithubReposResponse } from "../types/github";
 import type { LlmProvider } from "../types/llm-provider";
@@ -94,6 +95,10 @@ export function getAcceptanceMetrics(
   period: DashboardPeriod,
 ): Promise<AcceptanceMetrics> {
   return request(`/repos/${repoId}/acceptance-metrics`, { query: { period } });
+}
+
+export function getCostStats(repoId: string, period: DashboardPeriod): Promise<CostStats> {
+  return request(`/repos/${repoId}/cost-stats`, { query: { period } });
 }
 
 export function listReviewRuns(

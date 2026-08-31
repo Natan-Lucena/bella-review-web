@@ -2,6 +2,7 @@ import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { Comment, CommentSeverity, CommentStatus } from "../types/comment";
 import type { CommentReply } from "../types/comment-reply";
 import type { Credential } from "../types/credential";
+import type { CostStats } from "../types/cost-stats";
 import type { DashboardPeriod, DashboardUsage } from "../types/dashboard";
 import type { RepoConfig } from "../types/repo-config";
 import type { ReviewRunTrigger, ReviewRunTurn } from "../types/review-run";
@@ -60,6 +61,8 @@ export type RepoRecord = {
   // `kind`/`applyStatus` (fora do escopo da PRD 12, ver
   // frontend-prds/12-metricas-de-aceitacao-no-painel.md, "Fixtures").
   acceptanceMetricsByPeriod: Record<DashboardPeriod, AcceptanceMetrics>;
+  // Idem, pré-calculado à mão — ver PRD 22 (gráfico de custos no painel).
+  costStatsByPeriod: Record<DashboardPeriod, CostStats>;
   reviewRuns: ReviewRunRecord[];
   comments: Comment[];
   // Chaveado por comment.id — só existe entrada aqui para comentários que de
@@ -313,6 +316,59 @@ const bellaApiAcceptanceMetrics: Record<DashboardPeriod, AcceptanceMetrics> = {
   },
 };
 
+// Custo real, com as duas runType (review + comment_reply) e a categoria
+// "security" aparecendo nas duas — exercita o empilhamento por runType de um
+// futuro gráfico (ver PRD 22, "Fixtures"). previousPeriod difere do total
+// atual em todos os períodos (uma alta, uma queda), pra dar dado real a uma
+// eventual UI de variação percentual.
+const bellaApiCostStats: Record<DashboardPeriod, CostStats> = {
+  "7d": {
+    totalCost: 12.45,
+    totalCostByRunType: [
+      { runType: "review", totalCost: 9.8, count: 18 },
+      { runType: "comment_reply", totalCost: 2.65, count: 7 },
+    ],
+    breakdown: [
+      { category: "security", runType: "review", totalCost: 4.2, count: 6 },
+      { category: "performance", runType: "review", totalCost: 3.1, count: 5 },
+      { category: "correctness", runType: "review", totalCost: 2.5, count: 7 },
+      { category: "security", runType: "comment_reply", totalCost: 1.5, count: 4 },
+      { category: "performance", runType: "comment_reply", totalCost: 1.15, count: 3 },
+    ],
+    previousPeriod: { totalCost: 10.9 },
+  },
+  "30d": {
+    totalCost: 48.6,
+    totalCostByRunType: [
+      { runType: "review", totalCost: 38.75, count: 72 },
+      { runType: "comment_reply", totalCost: 9.85, count: 26 },
+    ],
+    breakdown: [
+      { category: "security", runType: "review", totalCost: 15.4, count: 24 },
+      { category: "performance", runType: "review", totalCost: 12.2, count: 20 },
+      { category: "correctness", runType: "review", totalCost: 11.15, count: 28 },
+      { category: "security", runType: "comment_reply", totalCost: 5.6, count: 14 },
+      { category: "performance", runType: "comment_reply", totalCost: 4.25, count: 12 },
+    ],
+    previousPeriod: { totalCost: 41.2 },
+  },
+  "90d": {
+    totalCost: 132.9,
+    totalCostByRunType: [
+      { runType: "review", totalCost: 104.3, count: 180 },
+      { runType: "comment_reply", totalCost: 28.6, count: 64 },
+    ],
+    breakdown: [
+      { category: "security", runType: "review", totalCost: 42.1, count: 60 },
+      { category: "performance", runType: "review", totalCost: 31.8, count: 50 },
+      { category: "correctness", runType: "review", totalCost: 30.4, count: 70 },
+      { category: "security", runType: "comment_reply", totalCost: 16.2, count: 36 },
+      { category: "performance", runType: "comment_reply", totalCost: 12.4, count: 28 },
+    ],
+    previousPeriod: { totalCost: 145.5 },
+  },
+};
+
 const bellaApi: RepoRecord = {
   id: "repo-bella-api",
   fullName: "Natan-Lucena/bella-reviewer-api",
@@ -368,6 +424,7 @@ const bellaApi: RepoRecord = {
     },
   },
   acceptanceMetricsByPeriod: bellaApiAcceptanceMetrics,
+  costStatsByPeriod: bellaApiCostStats,
   reviewRuns: [...bellaApiCompletedRuns, ...bellaApiOtherRuns],
   comments: bellaApiComments,
   commentRepliesByCommentId: {},
@@ -397,6 +454,24 @@ const bellaWebAcceptanceMetrics: AcceptanceMetrics = {
   coverage: { actionableCount: 1, observationCount: 1, actionableShare: 50 },
   costPerAppliedSuggestion: null,
   previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
+};
+
+// Repositório pequeno — mesmo valor nos três períodos (idem
+// bellaWebAcceptanceMetrics), mas ainda com as duas runType e uma categoria
+// ("correctness") repetida entre elas. previousPeriod.totalCost em 0: repo
+// novo, sem custo no período anterior.
+const bellaWebCostStats: CostStats = {
+  totalCost: 3.85,
+  totalCostByRunType: [
+    { runType: "review", totalCost: 1.2, count: 1 },
+    { runType: "comment_reply", totalCost: 2.65, count: 5 },
+  ],
+  breakdown: [
+    { category: "correctness", runType: "comment_reply", totalCost: 1.6, count: 3 },
+    { category: "correctness", runType: "review", totalCost: 1.2, count: 1 },
+    { category: "readability", runType: "comment_reply", totalCost: 1.05, count: 2 },
+  ],
+  previousPeriod: { totalCost: 0 },
 };
 
 // Replies do comment-bella-web-1 (guard de autenticação) — cobre os três
@@ -556,6 +631,11 @@ const bellaWeb: RepoRecord = {
     "30d": bellaWebAcceptanceMetrics,
     "90d": bellaWebAcceptanceMetrics,
   },
+  costStatsByPeriod: {
+    "7d": bellaWebCostStats,
+    "30d": bellaWebCostStats,
+    "90d": bellaWebCostStats,
+  },
   reviewRuns: [
     bellaWebCompletedRun,
     {
@@ -669,6 +749,14 @@ const bellaAction: RepoRecord = {
     "7d": noDecisionsYet(0, 0),
     "30d": noDecisionsYet(0, 0),
     "90d": noDecisionsYet(0, 0),
+  },
+  // Sem nenhuma execução, então sem custo nenhum — array vazio, não linhas com
+  // totalCost 0, mesmo racional de noDecisionsYet() acima para
+  // applyRateByCategory/applyRateBySeverity.
+  costStatsByPeriod: {
+    "7d": { totalCost: 0, totalCostByRunType: [], breakdown: [], previousPeriod: { totalCost: 0 } },
+    "30d": { totalCost: 0, totalCostByRunType: [], breakdown: [], previousPeriod: { totalCost: 0 } },
+    "90d": { totalCost: 0, totalCostByRunType: [], breakdown: [], previousPeriod: { totalCost: 0 } },
   },
   reviewRuns: [],
   comments: [],
