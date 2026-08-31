@@ -1,5 +1,6 @@
 import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { CommentFilters, ListCommentsResponse } from "../types/comment";
+import type { ListCommentRepliesResponse } from "../types/comment-reply";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod } from "../types/dashboard";
 import type { InstallActionResult, ListGithubReposResponse } from "../types/github";
@@ -111,6 +112,13 @@ export function listComments(
   filters: CommentFilters = {},
 ): Promise<ListCommentsResponse> {
   return request(`/repos/${repoId}/comments`, { query: filters });
+}
+
+export function listCommentReplies(
+  repoId: string,
+  commentId: string,
+): Promise<ListCommentRepliesResponse> {
+  return request(`/repos/${repoId}/comments/${commentId}/replies`);
 }
 
 export function listPrompts(): Promise<ListPromptsResponse> {

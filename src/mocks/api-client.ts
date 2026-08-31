@@ -1,5 +1,6 @@
 import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { Comment, CommentFilters, ListCommentsResponse } from "../types/comment";
+import type { ListCommentRepliesResponse } from "../types/comment-reply";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
 import type { Dashboard, DashboardPeriod, DashboardUsage } from "../types/dashboard";
 import type {
@@ -277,6 +278,7 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
     },
     reviewRuns: [],
     comments: [],
+    commentRepliesByCommentId: {},
   };
   repos.push(record);
   return toRepo(record);
@@ -490,6 +492,18 @@ function matchesCommentFilters(comment: Comment, filters: CommentFilters): boole
     return false;
   }
   return true;
+}
+
+// Comentário sem entrada em commentRepliesByCommentId (a maioria) devolve
+// lista vazia em vez de 404 — a existência do próprio comentário não é
+// verificada aqui (não há endpoint de detalhe de comentário na PRD 21).
+export async function listCommentReplies(
+  repoId: string,
+  commentId: string,
+): Promise<ListCommentRepliesResponse> {
+  await delay(300);
+  const repo = findRepoOrThrow(repoId);
+  return { replies: repo.commentRepliesByCommentId[commentId] ?? [] };
 }
 
 export async function listPrompts(): Promise<ListPromptsResponse> {

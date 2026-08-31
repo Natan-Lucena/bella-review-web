@@ -8,6 +8,7 @@ import {
   getAcceptanceMetrics,
   getDashboard,
   getReviewRunDetail,
+  listCommentReplies,
   listComments,
   listRepos,
   listReviewRuns,
@@ -267,5 +268,30 @@ describe("listComments", () => {
   it("includes at least one comment with prNumber null", async () => {
     const { comments } = await listComments("repo-bella-api", { limit: 24 });
     expect(comments.some((c) => c.prNumber === null)).toBe(true);
+  });
+});
+
+describe("listCommentReplies", () => {
+  it("returns the fixture replies for a known repo/comment id, covering distinct statuses and categories", async () => {
+    const { replies } = await listCommentReplies("repo-bella-web", "comment-bella-web-1");
+    expect(replies.length).toBeGreaterThanOrEqual(2);
+
+    const completed = replies.filter((reply) => reply.status === "completed");
+    expect(completed.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(completed.map((reply) => reply.category)).size).toBeGreaterThanOrEqual(2);
+
+    const queued = replies.find((reply) => reply.status === "queued");
+    expect(queued).toMatchObject({ category: null, bellaBody: null, completedAt: null });
+  });
+
+  it("returns an empty list for a comment with no replies", async () => {
+    const { replies } = await listCommentReplies("repo-bella-web", "comment-bella-web-2");
+    expect(replies).toEqual([]);
+  });
+
+  it("rejects with repo_not_found for an unknown repo id", async () => {
+    await expect(
+      listCommentReplies("repo-does-not-exist", "comment-bella-web-1"),
+    ).rejects.toMatchObject({ code: "repo_not_found" });
   });
 });
