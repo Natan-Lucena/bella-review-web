@@ -13,6 +13,7 @@ import type { DashboardPeriod } from "../../types/dashboard";
 import { AcceptanceMetricsSection } from "./AcceptanceMetricsSection";
 import { ActiveConfigSection } from "./ActiveConfigSection";
 import { CostBreakdownSection } from "./CostBreakdownSection";
+import { ModelCostSection } from "./ModelCostSection";
 import { PeriodSelector } from "./PeriodSelector";
 
 const REASONING_TOOLTIP =
@@ -118,6 +119,7 @@ export function DashboardPage() {
 
       <AcceptanceMetricsSection repoId={repoId} period={period} />
       <CostBreakdownSection repoId={repoId} period={period} />
+      <ModelCostSection repoId={repoId} period={period} />
     </div>
   );
 }
