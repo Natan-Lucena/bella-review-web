@@ -11,6 +11,8 @@ export const queryKeys = {
     ["repos", repoId, "dashboard", period] as const,
   repoAcceptanceMetrics: (repoId: string, period: DashboardPeriod) =>
     ["repos", repoId, "acceptance-metrics", period] as const,
+  repoCostStats: (repoId: string, period: DashboardPeriod) =>
+    ["repos", repoId, "cost-stats", period] as const,
   reviewRuns: (repoId: string, filters: ReviewRunFilters) =>
     ["repos", repoId, "runs", filters] as const,
   reviewRunDetail: (repoId: string, runId: string) => ["repos", repoId, "runs", runId] as const,

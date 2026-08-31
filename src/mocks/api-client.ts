@@ -2,6 +2,7 @@ import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { Comment, CommentFilters, ListCommentsResponse } from "../types/comment";
 import type { ListCommentRepliesResponse } from "../types/comment-reply";
 import type { ActionTokenResponse, Credential, WebhookSecretResponse } from "../types/credential";
+import type { CostStats } from "../types/cost-stats";
 import type { Dashboard, DashboardPeriod, DashboardUsage } from "../types/dashboard";
 import type {
   GithubRepoOption,
@@ -82,6 +83,15 @@ function emptyAcceptanceMetrics(): AcceptanceMetrics {
     coverage: { actionableCount: 0, observationCount: 0, actionableShare: null },
     costPerAppliedSuggestion: null,
     previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
+  };
+}
+
+function emptyCostStats(): CostStats {
+  return {
+    totalCost: 0,
+    totalCostByRunType: [],
+    breakdown: [],
+    previousPeriod: { totalCost: 0 },
   };
 }
 
@@ -276,6 +286,11 @@ export async function createRepo(fullName: string): Promise<{ id: string }> {
       "30d": emptyAcceptanceMetrics(),
       "90d": emptyAcceptanceMetrics(),
     },
+    costStatsByPeriod: {
+      "7d": emptyCostStats(),
+      "30d": emptyCostStats(),
+      "90d": emptyCostStats(),
+    },
     reviewRuns: [],
     comments: [],
     commentRepliesByCommentId: {},
@@ -421,6 +436,11 @@ export async function getAcceptanceMetrics(
 ): Promise<AcceptanceMetrics> {
   await delay(350);
   return findRepoOrThrow(repoId).acceptanceMetricsByPeriod[period];
+}
+
+export async function getCostStats(repoId: string, period: DashboardPeriod): Promise<CostStats> {
+  await delay(350);
+  return findRepoOrThrow(repoId).costStatsByPeriod[period];
 }
 
 export async function listReviewRuns(

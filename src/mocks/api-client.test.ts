@@ -6,6 +6,7 @@ import {
   generateActionToken,
   generateWebhookSecret,
   getAcceptanceMetrics,
+  getCostStats,
   getDashboard,
   getReviewRunDetail,
   listCommentReplies,
@@ -197,6 +198,39 @@ describe("getAcceptanceMetrics", () => {
 
   it("rejects with repo_not_found for an unknown repo id", async () => {
     await expect(getAcceptanceMetrics("repo-does-not-exist", "30d")).rejects.toMatchObject({
+      code: "repo_not_found",
+    });
+  });
+});
+
+describe("getCostStats", () => {
+  it("returns fixture data for a known repo/period, with both runTypes and a category shared between them", async () => {
+    const stats = await getCostStats("repo-bella-api", "30d");
+    expect(stats.totalCost).toBe(48.6);
+    expect(stats.totalCostByRunType).toEqual([
+      { runType: "review", totalCost: 38.75, count: 72 },
+      { runType: "comment_reply", totalCost: 9.85, count: 26 },
+    ]);
+    const securityRows = stats.breakdown.filter((entry) => entry.category === "security");
+    expect(securityRows.map((entry) => entry.runType).sort()).toEqual([
+      "comment_reply",
+      "review",
+    ]);
+    expect(stats.previousPeriod.totalCost).not.toBe(stats.totalCost);
+  });
+
+  it("returns zero totals and empty arrays for a repo with no activity at all", async () => {
+    const stats = await getCostStats("repo-bella-action", "30d");
+    expect(stats).toEqual({
+      totalCost: 0,
+      totalCostByRunType: [],
+      breakdown: [],
+      previousPeriod: { totalCost: 0 },
+    });
+  });
+
+  it("rejects with repo_not_found for an unknown repo id", async () => {
+    await expect(getCostStats("repo-does-not-exist", "30d")).rejects.toMatchObject({
       code: "repo_not_found",
     });
   });
