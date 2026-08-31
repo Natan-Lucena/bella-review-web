@@ -16,4 +16,6 @@ export const queryKeys = {
   reviewRunDetail: (repoId: string, runId: string) => ["repos", repoId, "runs", runId] as const,
   comments: (repoId: string, filters: CommentFilters) =>
     ["repos", repoId, "comments", filters] as const,
+  commentReplies: (repoId: string, commentId: string) =>
+    ["repos", repoId, "comments", commentId, "replies"] as const,
 };

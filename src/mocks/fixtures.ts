@@ -1,5 +1,6 @@
 import type { AcceptanceMetrics } from "../types/acceptance-metrics";
 import type { Comment, CommentSeverity, CommentStatus } from "../types/comment";
+import type { CommentReply } from "../types/comment-reply";
 import type { Credential } from "../types/credential";
 import type { DashboardPeriod, DashboardUsage } from "../types/dashboard";
 import type { RepoConfig } from "../types/repo-config";
@@ -61,6 +62,10 @@ export type RepoRecord = {
   acceptanceMetricsByPeriod: Record<DashboardPeriod, AcceptanceMetrics>;
   reviewRuns: ReviewRunRecord[];
   comments: Comment[];
+  // Chaveado por comment.id — só existe entrada aqui para comentários que de
+  // fato têm alguma reply (ver PRD 21); ausência de chave é equivalente a
+  // lista vazia, tratado assim em listCommentReplies().
+  commentRepliesByCommentId: Record<string, CommentReply[]>;
 };
 
 const BASE_DATE = "2026-07-01T12:00:00.000Z";
@@ -362,6 +367,7 @@ const bellaApi: RepoRecord = {
   acceptanceMetricsByPeriod: bellaApiAcceptanceMetrics,
   reviewRuns: [...bellaApiCompletedRuns, ...bellaApiOtherRuns],
   comments: bellaApiComments,
+  commentRepliesByCommentId: {},
 };
 
 // bella-web: só configurou Action (llm + scm + token da Action), nunca gerou
@@ -389,6 +395,55 @@ const bellaWebAcceptanceMetrics: AcceptanceMetrics = {
   costPerAppliedSuggestion: null,
   previousPeriod: { applyRate: { value: null }, costPerAppliedSuggestion: null },
 };
+
+// Replies do comment-bella-web-1 (guard de autenticação) — cobre os três
+// estados de status que a Tela de replies (PRD 21) precisa distinguir:
+// "completed" com categoria já classificada (duas categorias diferentes,
+// pra não parecer que só existe uma), e "queued" ainda sem bellaBody/
+// category/completedAt (mesmo racional de acceptanceMetricsByPeriod acima —
+// null é o estado real, não um array/string vazios).
+const bellaWebComment1Replies: CommentReply[] = [
+  {
+    id: "reply-bella-web-1-1",
+    humanBody:
+      "Isso não quebra o fluxo de SSR, onde não existe `window` disponível pra checar a sessão?",
+    humanAuthor: "juliana.dev",
+    status: "completed",
+    category: "clarification",
+    bellaBody:
+      "Não quebra — a checagem de expiração proposta roda só no guard client-side (useEffect), " +
+      "então em SSR ela simplesmente não executa e a página renderiza normalmente até a hidratação.",
+    bellaSuggestedCode: null,
+    createdAt: isoOffset(2, 0),
+    completedAt: isoOffset(1, 23),
+  },
+  {
+    id: "reply-bella-web-1-2",
+    humanBody:
+      "Discordo que isso seja high severity — o middleware do Next já redireciona pra /login antes disso.",
+    humanAuthor: "marcos.silva",
+    status: "completed",
+    category: "disagreement",
+    bellaBody:
+      "O middleware cobre a navegação inicial, mas não uma sessão que expira enquanto o usuário já " +
+      "está com a página aberta (SPA navigation) — nesse caso o guard client-side é o único ponto que " +
+      "trata o caso, daí a severidade.",
+    bellaSuggestedCode: null,
+    createdAt: isoOffset(1, 20),
+    completedAt: isoOffset(1, 18),
+  },
+  {
+    id: "reply-bella-web-1-3",
+    humanBody: "Vou aplicar a sugestão, só confirma o snippet certo pra colar aqui.",
+    humanAuthor: "juliana.dev",
+    status: "queued",
+    category: null,
+    bellaBody: null,
+    bellaSuggestedCode: null,
+    createdAt: isoOffset(0, 1),
+    completedAt: null,
+  },
+];
 
 const bellaWeb: RepoRecord = {
   id: "repo-bella-web",
@@ -507,6 +562,9 @@ const bellaWeb: RepoRecord = {
       createdAt: isoOffset(2, 0),
     },
   ],
+  commentRepliesByCommentId: {
+    "comment-bella-web-1": bellaWebComment1Replies,
+  },
 };
 
 // bella-action: repositório desativado (active: false => serviceState
@@ -561,6 +619,7 @@ const bellaAction: RepoRecord = {
   },
   reviewRuns: [],
   comments: [],
+  commentRepliesByCommentId: {},
 };
 
 export const seedRepos: RepoRecord[] = [bellaApi, bellaWeb, bellaAction];
