@@ -14,12 +14,17 @@ type ModelCostSectionProps = {
   period: DashboardPeriod;
 };
 
+const SECTION_DESCRIPTION =
+  "Quanto cada modelo de LLM configurado ao longo do tempo custou neste período — útil pra comparar antes/depois de trocar de provedor ou modelo. Execuções de antes desse rastreamento existir não aparecem aqui.";
 const NO_DATA_TEXT = "Nenhum custo por modelo registrado neste período ainda.";
 
 const modelColumns: Column<CostByModelEntry>[] = [
   { header: "Modelo", render: (row) => `${row.provider} / ${row.model}` },
   { header: "Custo total", render: (row) => formatCurrency(row.totalCost) },
   { header: "Execuções", render: (row) => row.count },
+  // "Usado de/até" é a janela de datas em que esse modelo gerou custo dentro
+  // do período selecionado — não a data em que ele foi configurado no
+  // repositório, que pode ser bem anterior.
   { header: "Usado de", render: (row) => formatDate(row.firstUsedAt) },
   { header: "Usado até", render: (row) => formatDate(row.lastUsedAt) },
 ];
@@ -32,7 +37,12 @@ const modelColumns: Column<CostByModelEntry>[] = [
 export function ModelCostSection({ repoId, period }: ModelCostSectionProps) {
   const { data: stats, isPending } = useCostStats(repoId, period);
 
-  const heading = <h3 className="text-[17px] font-medium tracking-tight text-ink">Custo por modelo</h3>;
+  const heading = (
+    <div>
+      <h3 className="text-[17px] font-medium tracking-tight text-ink">Custo por modelo</h3>
+      <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{SECTION_DESCRIPTION}</p>
+    </div>
+  );
 
   if (isPending || !stats) {
     return (

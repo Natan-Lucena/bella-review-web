@@ -16,8 +16,14 @@ type AcceptanceMetricsSectionProps = {
   period: DashboardPeriod;
 };
 
+const SECTION_DESCRIPTION =
+  "Mede o quanto o desenvolvedor concorda com as sugestões da Bella na prática — quantas foram de fato aplicadas, e o custo real de gerar cada uma que emplacou.";
+const APPLY_RATE_TOOLTIP =
+  "Percentual das sugestões de código geradas neste período que foram aplicadas pelo desenvolvedor (pelo botão de aplicar ou manualmente) — entre as que já tiveram uma decisão tomada.";
 const COVERAGE_TOOLTIP =
   "Percentual dos comentários gerados neste período que vieram com uma sugestão de código aplicável, em vez de só uma observação.";
+const DECIDED_TOOLTIP =
+  "Sugestões ainda pendentes de decisão, ou substituídas por uma versão mais nova antes de o dev decidir, não entram nesta contagem.";
 const APPLY_RATE_UNAVAILABLE_HINT = "Nenhuma sugestão decidida neste período ainda";
 const COST_UNAVAILABLE_HINT = "Nenhuma sugestão aplicada neste período ainda";
 const NO_DATA_TEXT = "Nenhum comentário gerado neste período ainda.";
@@ -65,7 +71,10 @@ export function AcceptanceMetricsSection({ repoId, period }: AcceptanceMetricsSe
   const { data: metrics, isPending } = useAcceptanceMetrics(repoId, period);
 
   const heading = (
-    <h3 className="text-[17px] font-medium tracking-tight text-ink">Sugestões e aceitação</h3>
+    <div>
+      <h3 className="text-[17px] font-medium tracking-tight text-ink">Sugestões e aceitação</h3>
+      <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{SECTION_DESCRIPTION}</p>
+    </div>
   );
 
   if (isPending || !metrics) {
@@ -99,6 +108,7 @@ export function AcceptanceMetricsSection({ repoId, period }: AcceptanceMetricsSe
           label="Taxa de aplicação"
           value={rateOrDash(applyRate.value)}
           unavailable={applyRate.value === null}
+          tooltip={APPLY_RATE_TOOLTIP}
           hint={
             applyRate.value === null
               ? APPLY_RATE_UNAVAILABLE_HINT
@@ -123,7 +133,10 @@ export function AcceptanceMetricsSection({ repoId, period }: AcceptanceMetricsSe
       {hasAnyComment ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card padding="lg">
-            <h4 className="mb-3 text-[13.5px] font-medium text-ink-muted">Por categoria</h4>
+            <h4 className="mb-1 text-[13.5px] font-medium text-ink-muted">Por categoria</h4>
+            <p className="mb-3 text-xs leading-relaxed text-ink-muted/80">
+              Taxa de aplicação de cada categoria de achado (segurança, performance, etc). {DECIDED_TOOLTIP}
+            </p>
             <DataTable
               columns={categoryColumns}
               rows={applyRateByCategory}
@@ -131,7 +144,10 @@ export function AcceptanceMetricsSection({ repoId, period }: AcceptanceMetricsSe
             />
           </Card>
           <Card padding="lg">
-            <h4 className="mb-3 text-[13.5px] font-medium text-ink-muted">Por severidade</h4>
+            <h4 className="mb-1 text-[13.5px] font-medium text-ink-muted">Por severidade</h4>
+            <p className="mb-3 text-xs leading-relaxed text-ink-muted/80">
+              O mesmo recorte, agora por severidade do achado (crítica → baixa).
+            </p>
             <DataTable
               columns={severityColumns}
               rows={applyRateBySeverity}
